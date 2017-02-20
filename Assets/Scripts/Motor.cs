@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Motor : MonoBehaviour {
+public class Motor : MonoBehaviour
+{
 
     // Use this for initialization
     public float motVmax;
@@ -15,12 +16,14 @@ public class Motor : MonoBehaviour {
     public float motActualAcc;
     public float motActualSpeed;
     public float motCmdSpeed;
+    public float motForceTrust;
 
     private Controls controls;
     private Propeler propeler;
     private Rigidbody rg;
 
-    void Awake () {
+    void Awake()
+    {
 
         controls = transform.parent.GetComponent<Controls>();
         propeler = transform.GetComponentInChildren<Propeler>();
@@ -32,25 +35,38 @@ public class Motor : MonoBehaviour {
         motActualVmax = motVmax;
     }
 
-    void FixedUpdate()
+    void Update()
     {
         float Delta = Time.deltaTime;
-        float torque;
         if (motActualSpeed < motCmdSpeed)
             motActualSpeed += motActualAcc;
         else if (motActualSpeed > motCmdSpeed)
             motActualSpeed -= motActualAcc;
         motCmdSpeed = Mathf.Clamp(motCmdSpeed, 0, motActualVmax);
-        if (gameObject.GetComponentInParent<FixedJoint>()|| gameObject.GetComponentInParent<HingeJoint>())
+        if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            propeler.transform.Rotate(Vector3.forward * (controls.throttleMin*2+motActualSpeed*1.4f) *  Delta);
-            float trust= Mathf.Clamp(((motActualSpeed / 20)* propeler.propThrust * controls.throttleRate * Delta), 0, propeler.propThrust*4); 
-            rg.AddRelativeForce(new Vector3(0, trust, 0), ForceMode.Force);
-            if (anticlockwise == true)
-                torque = -(motCmdSpeed/4 ) - rg.angularVelocity.y * Delta;
-            else
-                torque = (motCmdSpeed/4 ) - rg.angularVelocity.y * Delta;            
-            rg.AddTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
+            propeler.transform.Rotate(Vector3.forward * (controls.throttleMin * 60 + motActualSpeed * 1.4f) * Delta);
+            motForceTrust = Mathf.Clamp(((motActualSpeed / 30) * propeler.propThrust * controls.throttleRate * Delta), 0, propeler.propThrust * 4);
+        }
+        else
+        {
+            motForceTrust = 0;
         }
     }
+
+    void FixedUpdate()
+    {
+        float torque;
+        rg.AddRelativeForce(new Vector3(0, motForceTrust, 0), ForceMode.Force);
+        if (motForceTrust > 0)
+        {
+            if (anticlockwise == true)
+                torque = -(motCmdSpeed / 2) - rg.angularVelocity.y;
+            else
+                torque = (motCmdSpeed / 2) - rg.angularVelocity.y;
+            rg.AddTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
+        }
+
+    }
+    
 }

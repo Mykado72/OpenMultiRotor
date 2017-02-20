@@ -20,7 +20,7 @@ public class Controls : MonoBehaviour {
     public float cmdPitch;
     public float cmdYaw;
 
-    public Rigidbody chassi;
+    public Rigidbody rgChassi;
     public Rigidbody motorFrontLeft;
     private float motorCmdFrontLeft;
     public Rigidbody motorFrontRight;
@@ -32,7 +32,8 @@ public class Controls : MonoBehaviour {
     public string joystickname;
 
     // Use this for initialization
-    void Start () {
+    void  Awake () {
+        rgChassi.maxAngularVelocity = 40;
         string[] joynames = Input.GetJoystickNames();
         if (joynames.Length > 0)
         {
@@ -103,24 +104,20 @@ public class Controls : MonoBehaviour {
         cmdRoll = consignVector.x;
         cmdPitch = consignVector.z;
         cmdYaw = consignVector.y;
-        motorCmdFrontLeft = cmdRoll * rollRate  + cmdYaw * yawRate - cmdPitch * pitchRate ;
-        motorCmdFrontRight = -cmdRoll * rollRate - cmdYaw * yawRate - cmdPitch * pitchRate ;
-        motorCmdRearLeft = cmdRoll * rollRate - cmdYaw * yawRate + cmdPitch * pitchRate ;
-        motorCmdRearRight = -cmdRoll * rollRate  + cmdYaw * yawRate + cmdPitch * pitchRate ;
+        motorCmdFrontLeft = -cmdRoll * rollRate  + cmdYaw * yawRate + cmdPitch * pitchRate ;
+        motorCmdFrontRight = cmdRoll * rollRate - cmdYaw * yawRate + cmdPitch * pitchRate ;
+        motorCmdRearLeft = -cmdRoll * rollRate - cmdYaw * yawRate - cmdPitch * pitchRate ;
+        motorCmdRearRight = cmdRoll * rollRate  + cmdYaw * yawRate - cmdPitch * pitchRate ;
         motorSet.motorSet[0].motCmdSpeed = desiredSpeed + motorCmdFrontLeft * rcRate;
         motorSet.motorSet[1].motCmdSpeed = desiredSpeed + motorCmdFrontRight * rcRate;
         motorSet.motorSet[2].motCmdSpeed = desiredSpeed + motorCmdRearLeft * rcRate;
         motorSet.motorSet[3].motCmdSpeed = desiredSpeed + motorCmdRearRight * rcRate;
+    }
 
-        //    if (AVGAUCHE.gameObject.GetComponentInParent<FixedJoint>())
-        //         AVGAUCHE.AddRelativeForce(new Vector3(0, ((1+throttle)/2) * throttleRate + GauchDroite.x * rollRate * rcRate - AvantArriere.z* pitchRate * rcRate, 0)  * Delta);
-        //    if (AVDROITE.gameObject.GetComponentInParent<FixedJoint>())
-        //       AVDROITE.AddRelativeForce(new Vector3(0, ((1 + throttle)/2) * throttleRate - GauchDroite.x * rollRate * rcRate - AvantArriere.z * pitchRate * rcRate, 0) * Delta);
-        //    if (ARGAUCHE.gameObject.GetComponentInParent<FixedJoint>())
-        //       ARGAUCHE.AddRelativeForce(new Vector3(0, ((1 + throttle)/2) * throttleRate + GauchDroite.x * rollRate * rcRate + AvantArriere.z * pitchRate * rcRate, 0) * Delta);
-        //    if (ARDROITE.gameObject.GetComponentInParent<FixedJoint>())
-        //       ARDROITE.AddRelativeForce(new Vector3(0, ((1 + throttle)/2) * throttleRate - GauchDroite.x * rollRate * rcRate + AvantArriere.z * pitchRate * rcRate, 0) * Delta);
-
+    void FixedUpdate()
+    {
+        // clamp velocity:
+        rgChassi.velocity = new Vector3(Mathf.Clamp(rgChassi.velocity.x, -5f, 5f), Mathf.Clamp(rgChassi.velocity.y, -9.81f, 10f), Mathf.Clamp(rgChassi.velocity.z, -5f, 5f));
     }
 
     public void Restart()

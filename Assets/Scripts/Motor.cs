@@ -26,7 +26,7 @@ public class Motor : MonoBehaviour {
         propeler = transform.GetComponentInChildren<Propeler>();
         rg = transform.GetComponent<Rigidbody>();
         rg.mass = motWeight;
-        rg.maxAngularVelocity = 420;
+        rg.maxAngularVelocity = Mathf.Infinity;
         motActualAcc = motAcc;
         // motActualSpeed = controls.throttleMin;
         motActualVmax = motVmax;
@@ -51,9 +51,6 @@ public class Motor : MonoBehaviour {
             else
                 torque = (motCmdSpeed/4 ) - rg.angularVelocity.y * Delta;            
             rg.AddTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
-            // clamp velocity:
-            rg.velocity = new Vector3(Mathf.Clamp(rg.velocity.x, -10f, 10f), Mathf.Clamp(rg.velocity.y, -10f, 10f), Mathf.Clamp(rg.velocity.z, -10f, 10f));
         }
-
     }
 }

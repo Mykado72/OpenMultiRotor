@@ -143,10 +143,10 @@ public class Controls : MonoBehaviour {
     void FloorEffect()
     {
         floorDistance = FloorDistance();
-        if (floorDistance > 0 & floorDistance < 0.5f)
+        if (floorDistance > 0 & floorDistance < 0.4f)
         {
             Debug.Log("Floor Effect " + floorDistance);
-            floorEffect = convertedThrottle+1.85f;
+            floorEffect = convertedThrottle+1.1f;
             rgChassi.AddRelativeForce(Vector3.up* floorEffect, ForceMode.Acceleration);
         }
     }

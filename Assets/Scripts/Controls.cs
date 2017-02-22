@@ -37,7 +37,7 @@ public class Controls : MonoBehaviour {
     // Use this for initialization
     void  Awake () {
         rgChassi.maxAngularVelocity = 60;
-        rgChassi.centerOfMass = new Vector3(0,-0.05f,0);
+        // rgChassi.centerOfMass = new Vector3(0,0.05f,0); // deplacer le centre de gravité diminue les réactions....
         string[] joynames = Input.GetJoystickNames();
         if (joynames.Length > 0)
         {

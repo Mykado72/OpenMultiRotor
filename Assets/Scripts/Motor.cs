@@ -64,7 +64,7 @@ public class Motor : MonoBehaviour
                 torque = -(motCmdSpeed / 2) - rg.angularVelocity.y;
             else
                 torque = (motCmdSpeed / 2) - rg.angularVelocity.y;
-            rg.AddTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
+            rg.AddRelativeTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
         }
 
     }

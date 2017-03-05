@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Camera : MonoBehaviour {
+public class Cam : MonoBehaviour {
 
     public Transform target;
     public bool FPV;

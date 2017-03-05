@@ -5,7 +5,7 @@ using UnityEngine;
 public class MotorSet : MonoBehaviour {
 
     // Use this for initialization
-    public Motor[] motorSet;
+    public MotorRC[] motorSet;
     void Start () {
 		
 	}

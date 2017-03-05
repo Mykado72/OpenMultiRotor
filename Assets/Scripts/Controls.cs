@@ -21,8 +21,6 @@ public class Controls : MonoBehaviour {
     public float cmdYaw;
     public float convertedThrottle;
     public float desiredSpeed;
-    public float floorEffect;
-    public float floorDistance;
     public Rigidbody rgChassi;
     public Rigidbody motorFrontLeft;
     private float motorCmdFrontLeft;
@@ -33,11 +31,58 @@ public class Controls : MonoBehaviour {
     public Rigidbody motorRearRight;
     private float motorCmdRearRight;
     public string joystickname;
+    public Vector3 spawnPosition;
+    public Quaternion spawnRotation;
 
     // Use this for initialization
     void  Awake () {
-        rgChassi.maxAngularVelocity = 60;
-        // rgChassi.centerOfMass = new Vector3(0,0.05f,0); // deplacer le centre de gravité diminue les réactions....
+
+    }
+
+    void Start()
+    {
+        rgChassi.transform.gameObject.SetActive(false);
+        rgChassi.transform.gameObject.SetActive(true);
+        rgChassi.transform.position = spawnPosition;
+        rgChassi.transform.rotation = Quaternion.Euler(Vector3.zero);
+        rgChassi.isKinematic = true; // clear forces
+        rgChassi.isKinematic = false; 
+        rgChassi.velocity = Vector3.zero;
+        rgChassi.maxAngularVelocity = 2;
+        rgChassi.angularVelocity = Vector3.zero;
+        rgChassi.ResetInertiaTensor();
+        rgChassi.centerOfMass = new Vector3(0,-0.001f,0); // decendre le centre de gravité rend plus mou
+
+        motorFrontLeft.transform.gameObject.SetActive(false);
+        motorFrontLeft.transform.gameObject.SetActive(true);
+        motorFrontLeft.isKinematic=true;
+        motorFrontLeft.isKinematic = false;
+        motorFrontLeft.angularVelocity = Vector3.zero;
+        motorFrontLeft.transform.rotation = Quaternion.Euler(Vector3.zero);
+
+        motorFrontRight.transform.gameObject.SetActive(false);
+        motorFrontRight.transform.gameObject.SetActive(true);
+        motorFrontRight.isKinematic = true;
+        motorFrontRight.isKinematic = false;
+        motorFrontRight.angularVelocity = Vector3.zero;
+        motorFrontRight.transform.rotation = Quaternion.Euler(Vector3.zero);
+
+        motorRearLeft.transform.gameObject.SetActive(false);
+        motorRearLeft.transform.gameObject.SetActive(true);
+        motorRearLeft.isKinematic = true;
+        motorRearLeft.isKinematic = false;
+        motorRearLeft.angularVelocity = Vector3.zero;
+        motorRearLeft.transform.rotation = Quaternion.Euler(Vector3.zero);
+
+        motorRearRight.transform.gameObject.SetActive(false);
+        motorRearRight.transform.gameObject.SetActive(true);
+        motorRearRight.isKinematic = true;
+        motorRearRight.isKinematic = false;
+        motorRearRight.angularVelocity = Vector3.zero;
+        motorRearRight.transform.rotation = Quaternion.Euler(Vector3.zero);
+
+
+
         string[] joynames = Input.GetJoystickNames();
         if (joynames.Length > 0)
         {
@@ -52,7 +97,6 @@ public class Controls : MonoBehaviour {
         {
             joystick = false;
         }
-
     }
 
     // Update is called once per frame
@@ -102,7 +146,7 @@ public class Controls : MonoBehaviour {
             break;
         }
         convertedThrottle = (1 + throttle) / 2 ;
-        desiredSpeed = throttleMin+(motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
+        desiredSpeed = throttleMin/ throttleRate + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
         cmdRoll = consignVector.x;
         cmdPitch = consignVector.z;
         cmdYaw = consignVector.y;
@@ -110,45 +154,22 @@ public class Controls : MonoBehaviour {
         motorCmdFrontRight = cmdRoll * rollRate - cmdYaw * yawRate + cmdPitch * pitchRate ;
         motorCmdRearLeft = -cmdRoll * rollRate - cmdYaw * yawRate - cmdPitch * pitchRate ;
         motorCmdRearRight = cmdRoll * rollRate  + cmdYaw * yawRate - cmdPitch * pitchRate ;
-        motorSet.motorSet[0].motCmdSpeed = desiredSpeed + motorCmdFrontLeft * rcRate;
-        motorSet.motorSet[1].motCmdSpeed = desiredSpeed + motorCmdFrontRight * rcRate;
-        motorSet.motorSet[2].motCmdSpeed = desiredSpeed + motorCmdRearLeft * rcRate;
-        motorSet.motorSet[3].motCmdSpeed = desiredSpeed + motorCmdRearRight * rcRate;
+        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft * rcRate;
+        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * rcRate;
+        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft * rcRate;
+        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight * rcRate;
 
     }
 
     void FixedUpdate()
     {
-        FloorEffect();
+
         // ClampVelocity();
     }
 
     void ClampVelocity()
     {
         rgChassi.velocity = new Vector3(Mathf.Clamp(rgChassi.velocity.x, -10f, 10f), Mathf.Clamp(rgChassi.velocity.y, -9.81f, 10f), Mathf.Clamp(rgChassi.velocity.z, -10f, 10f));
-    }
-
-    float FloorDistance()
-    {
-        RaycastHit hit;
-        if (Physics.Raycast(rgChassi.position, -Vector3.up, out hit))
-        {
-            Debug.Log(hit.transform.name+ " : " +hit.distance);
-            return hit.distance;
-        }
-        else
-            return 0;
-    }
-
-    void FloorEffect()
-    {
-        floorDistance = FloorDistance();
-        if (floorDistance > 0 & floorDistance < 0.4f)
-        {
-            Debug.Log("Floor Effect " + floorDistance);
-            floorEffect = convertedThrottle+1.1f;
-            rgChassi.AddRelativeForce(Vector3.up* floorEffect, ForceMode.Acceleration);
-        }
     }
 
 

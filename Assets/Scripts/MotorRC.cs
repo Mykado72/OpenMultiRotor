@@ -101,7 +101,7 @@ public class MotorRC : MonoBehaviour
         floorDistance = FloorDistance();
         if (floorDistance > 0 & floorDistance < 0.3f)
         {
-            Debug.Log("Floor Effect " + floorDistance);
+            // Debug.Log("Floor Effect " + floorDistance);
             floorEffect = controls.desiredSpeed / (floorDistance*1000000);
             rg.AddRelativeForce(Vector3.up * floorEffect, ForceMode.Force);
         }

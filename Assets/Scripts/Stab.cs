@@ -11,6 +11,17 @@ public class Stab : MonoBehaviour {
     public Vector3 vpredictedUp;
     public float anglePitch;
     public float angleRoll;
+
+    public RectTransform horizonRoll;
+    public RectTransform horizonPitch;
+
+    // Update is called once per frame
+    void Update()
+    {
+        horizonRoll.rotation = Quaternion.Euler(0,0,-angleRoll);
+        horizonPitch.sizeDelta = new Vector2(10,180-anglePitch);
+    }
+
     // Update is called once per frame
     void FixedUpdate()
     {
@@ -19,8 +30,8 @@ public class Stab : MonoBehaviour {
         // Debug.Log(vpredictedUp);
         // Vector3 torqueVector = Vector3.Cross(predictedUp, Vector3.up);
         // rgChassi.AddTorque(torqueVector * speed * speed);
-        anglePitch = PosNegAngleY(Vector3.up, transform.forward);  //     Vector3.Angle(transform.forward, Vector3.up);
-        angleRoll = PosNegAngleX(Vector3.up, transform.right);  // Vector3.Angle(transform.right, Vector3.up);
+        anglePitch = rgChassi.transform.rotation.eulerAngles.x;
+        angleRoll = rgChassi.transform.rotation.eulerAngles.z;
         //transform.up //+y axis
         //transform.forward //+z axis
         // transform.right //+x axis

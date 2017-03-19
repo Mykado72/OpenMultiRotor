@@ -30,9 +30,9 @@ public class Cam2 : MonoBehaviour {
     {
         velocity = Vector3.zero;
         // Set the position of the camera's transform to be the same as the player's, but offset by the calculated offset distance.
-        transform.position = Vector3.SmoothDamp(transform.position, player.transform.position+ offset, ref velocity, 0.1f);
+        transform.position = Vector3.SmoothDamp(transform.position, player.transform.position+ offset, ref velocity, 0.025f);
         Quaternion rotation = Quaternion.LookRotation(player.transform.position - transform.position);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 0.95f); 
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 0.90f); 
     }
 
     public void Toggle()

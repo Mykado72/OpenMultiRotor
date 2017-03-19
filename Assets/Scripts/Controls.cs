@@ -11,7 +11,9 @@ public class Controls : MonoBehaviour {
     public float throttleMin;
     public float throttleRate;
     public float rollRate;
+    public float rollExpo;
     public float pitchRate;
+    public float pitchExpo;
     public float yawRate;
     public float rcRate;
     public MotorSet motorSet;
@@ -48,10 +50,10 @@ public class Controls : MonoBehaviour {
         rgChassi.isKinematic = true; // clear forces
         rgChassi.isKinematic = false; 
         rgChassi.velocity = Vector3.zero;
-        rgChassi.maxAngularVelocity = 2;
+        rgChassi.maxAngularVelocity = 10; // Mathf.Infinity;
         rgChassi.angularVelocity = Vector3.zero;
         rgChassi.ResetInertiaTensor();
-        rgChassi.centerOfMass = new Vector3(0,-0.001f,0); // decendre le centre de gravité rend plus mou
+        // rgChassi.centerOfMass = new Vector3(0,-0.001f,0); // descendre le centre de gravité rend plus mou
 
         motorFrontLeft.transform.gameObject.SetActive(false);
         motorFrontLeft.transform.gameObject.SetActive(true);
@@ -109,10 +111,10 @@ public class Controls : MonoBehaviour {
         case 1:
                 if (joystick)
                 {
-                    consignVector.x = Input.GetAxis("JoyRoll");
-                    consignVector.y = Input.GetAxis("JoyYaw");
-                    consignVector.z = Input.GetAxis("JoyPitch(Mode1)-Trottle(Mode2)");
-                    throttle = Input.GetAxis("JoyTrottle(Mode1)-Pitch(Mode2)");
+                    consignVector.x = Expo(Input.GetAxis("axis0"), rollExpo, 0.02f);    // Roll"
+                    consignVector.y = Input.GetAxis("axis3");
+                    consignVector.z = -Expo(Input.GetAxis("axis1"), pitchExpo, 0.02f); // Pitch (Mode1)
+                    throttle = -Input.GetAxis("axis2"); // Input.GetAxis("JoyTrottle(Mode1)-Pitch(Mode2)");
                 }
                 else
                 {
@@ -146,35 +148,51 @@ public class Controls : MonoBehaviour {
             break;
         }
         convertedThrottle = (1 + throttle) / 2 ;
-        desiredSpeed = throttleMin/ throttleRate + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
+        desiredSpeed = throttleMin + (throttleRate *2000)* convertedThrottle; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
         cmdRoll = consignVector.x;
         cmdPitch = consignVector.z;
         cmdYaw = consignVector.y;
-        motorCmdFrontLeft = -cmdRoll * rollRate  + cmdYaw * yawRate + cmdPitch * pitchRate ;
-        motorCmdFrontRight = cmdRoll * rollRate - cmdYaw * yawRate + cmdPitch * pitchRate ;
-        motorCmdRearLeft = -cmdRoll * rollRate - cmdYaw * yawRate - cmdPitch * pitchRate ;
-        motorCmdRearRight = cmdRoll * rollRate  + cmdYaw * yawRate - cmdPitch * pitchRate ;
+        
+        //motorCmdFrontLeft = -cmdRoll * rollRate  + cmdYaw * yawRate + cmdPitch * pitchRate ;
+        motorCmdFrontLeft = -cmdRoll * rollRate + cmdPitch * pitchRate;
+
+        //motorCmdFrontRight = cmdRoll * rollRate - cmdYaw * yawRate + cmdPitch * pitchRate ;
+        motorCmdFrontRight = cmdRoll * rollRate + cmdPitch * pitchRate;
+
+        //motorCmdRearLeft = -cmdRoll * rollRate - cmdYaw * yawRate - cmdPitch * pitchRate ;
+        motorCmdRearLeft = -cmdRoll * rollRate - cmdPitch * pitchRate;
+
+        //motorCmdRearRight = cmdRoll * rollRate  + cmdYaw * yawRate - cmdPitch * pitchRate ;
+        motorCmdRearRight = cmdRoll * rollRate - cmdPitch * pitchRate;
+
         motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft * rcRate;
         motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * rcRate;
         motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft * rcRate;
         motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight * rcRate;
-
     }
 
     void FixedUpdate()
     {
-
-        // ClampVelocity();
+        rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw*yawRate, 0), ForceMode.VelocityChange);
+        ClampVelocity();
     }
 
     void ClampVelocity()
     {
-        rgChassi.velocity = new Vector3(Mathf.Clamp(rgChassi.velocity.x, -10f, 10f), Mathf.Clamp(rgChassi.velocity.y, -9.81f, 10f), Mathf.Clamp(rgChassi.velocity.z, -10f, 10f));
+        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 14f);
     }
 
 
     public void Restart()
     {
         SceneManager.LoadScene("scene1");
+    }
+
+    public float Expo(float value, float expo, float deadband)
+    {  // expo allant de 0 à 1 
+        if (Mathf.Abs(value) > deadband)
+            return value*Mathf.Pow(Mathf.Abs(value), expo);
+        else
+            return 0f;
     }
 }

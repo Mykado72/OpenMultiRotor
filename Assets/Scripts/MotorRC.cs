@@ -52,16 +52,14 @@ public class MotorRC : MonoBehaviour
     void Update()
     {
         float Delta = Time.deltaTime;
-        if (motActualSpeed < motCmdSpeed* motActualAcc)
+        if (motActualSpeed < motCmdSpeed)
             motActualSpeed += motActualAcc;
-        else if (motActualSpeed > motCmdSpeed* motActualAcc)
+        else if (motActualSpeed > motCmdSpeed)
             motActualSpeed -= motActualAcc;
         // motCmdSpeed = Mathf.Clamp(motCmdSpeed, 0, motActualVmax);
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            propeler.transform.Rotate(Vector3.forward * (1500+controls.desiredSpeed / 40 + motActualSpeed/2) * Delta);
-            motForceTrust = ((controls.desiredSpeed/200)* controls.throttleRate + (motActualSpeed / 50) * propeler.propThrust)* Delta;
-            // motForceTrust = Mathf.Clamp(((motActualSpeed / 30) * propeler.propThrust * controls.throttleRate * Delta), 0, propeler.propThrust * 4);
+            propeler.transform.Rotate(Vector3.forward * (1000+controls.desiredSpeed *0.5f + motActualSpeed*20) * Delta);
         }
         else
         {
@@ -72,16 +70,17 @@ public class MotorRC : MonoBehaviour
     void FixedUpdate()
     {
         float torque;
-        rg.AddRelativeForce(new Vector3(0, motForceTrust, 0), ForceMode.Force);
-        if (motForceTrust > 0)
+        if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
+            motForceTrust = (controls.desiredSpeed/1000)+(controls.throttleRate * (motActualSpeed / 200) * propeler.propThrust);
             if (anticlockwise == true)
                 torque = -(motCmdSpeed / 2) - rg.angularVelocity.y;
             else
                 torque = (motCmdSpeed / 2) - rg.angularVelocity.y;
-            rg.AddRelativeTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
+            //rg.AddRelativeTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
+            rg.AddRelativeForce(new Vector3(0, motForceTrust, 0), ForceMode.Force);
+            FloorEffect();
         }
-        FloorEffect();
     }
 
     float FloorDistance()

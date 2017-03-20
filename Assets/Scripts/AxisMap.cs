@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
+using UnityEditor;
 
 public class AxisMap : MonoBehaviour {
 
     public Slider [] sliders;
-
-	// Use this for initialization
-	void Start () {
+    public Dropdown[] axisNames;
+    public Toggle [] inversors;
+    public Mapping mapping;
+    // Use this for initialization
+    void Start () {
 		
 	}
 	
@@ -16,12 +19,26 @@ public class AxisMap : MonoBehaviour {
 	void Update () {
         for (int axisNb = 0; axisNb < sliders.Length; axisNb++)
         {
-            sliders[axisNb].value = Input.GetAxis("axis"+axisNb.ToString());
+            if (inversors[axisNb].isOn == true)
+                sliders[axisNb].value = -Input.GetAxis("axis" + axisNb.ToString());
+            else
+                sliders[axisNb].value = Input.GetAxis("axis"+axisNb.ToString());
         }
 	}
 
-    public void MoveSlider(int sliderNb, int axisNb)
+    public void Save()
     {
-
+        mapping =Mapping.CreateInstance<Mapping>();
+        
+        for (int axisNb = 0; axisNb < sliders.Length; axisNb++)
+        {
+            if (axisNames[axisNb].itemText.text=="Roll")
+            {
+                mapping.rollAxisName = "axis" + axisNb.ToString();
+                mapping.rollAxisInversor = inversors [axisNb].isOn;
+                Debug.Log("Roll Inversor :" + inversors[axisNb].isOn);
+            }
+        }
+        AssetDatabase.CreateAsset(mapping, "Assets/Mapping.asset");
     }
 }

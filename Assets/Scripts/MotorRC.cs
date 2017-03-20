@@ -72,7 +72,7 @@ public class MotorRC : MonoBehaviour
         float torque;
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            motForceTrust = (controls.desiredSpeed/1000)+(controls.throttleRate * (motActualSpeed / 200) * propeler.propThrust);
+            motForceTrust = (controls.desiredSpeed/1000)+(controls.throttleRate * (motActualSpeed / 240) * propeler.propThrust);
             if (anticlockwise == true)
                 torque = -(motCmdSpeed / 2) - rg.angularVelocity.y;
             else

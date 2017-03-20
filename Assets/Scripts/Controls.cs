@@ -15,6 +15,7 @@ public class Controls : MonoBehaviour {
     public float pitchRate;
     public float pitchExpo;
     public float yawRate;
+    public float yawExpo;
     public float rcRate;
     public MotorSet motorSet;
     public Vector3 consignVector;
@@ -111,9 +112,9 @@ public class Controls : MonoBehaviour {
         case 1:
                 if (joystick)
                 {
-                    consignVector.x = Expo(Input.GetAxis("axis0"), rollExpo, 0.02f);    // Roll"
-                    consignVector.y = Input.GetAxis("axis3");
-                    consignVector.z = -Expo(Input.GetAxis("axis1"), pitchExpo, 0.02f); // Pitch (Mode1)
+                    consignVector.x = Expo(Input.GetAxis("axis0")/rollRate, rollExpo, 0.00002f);    // Roll
+                    consignVector.y = Expo(Input.GetAxis("axis3")/yawRate, yawExpo, 0.0002f);     // Yaw
+                    consignVector.z = -Expo(Input.GetAxis("axis1")/pitchRate, pitchExpo, 0.00002f); // Pitch (Mode1)
                     throttle = -Input.GetAxis("axis2"); // Input.GetAxis("JoyTrottle(Mode1)-Pitch(Mode2)");
                 }
                 else
@@ -148,38 +149,38 @@ public class Controls : MonoBehaviour {
             break;
         }
         convertedThrottle = (1 + throttle) / 2 ;
-        desiredSpeed = throttleMin + (throttleRate *2000)* convertedThrottle; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
-        cmdRoll = consignVector.x;
+        desiredSpeed = throttleMin + (throttleRate *1000)* convertedThrottle; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
+        cmdRoll = consignVector.x ;
         cmdPitch = consignVector.z;
-        cmdYaw = consignVector.y;
+        cmdYaw = consignVector.y ;
         
         //motorCmdFrontLeft = -cmdRoll * rollRate  + cmdYaw * yawRate + cmdPitch * pitchRate ;
-        motorCmdFrontLeft = -cmdRoll * rollRate + cmdPitch * pitchRate;
+        motorCmdFrontLeft = -cmdRoll  + cmdPitch ;
 
         //motorCmdFrontRight = cmdRoll * rollRate - cmdYaw * yawRate + cmdPitch * pitchRate ;
-        motorCmdFrontRight = cmdRoll * rollRate + cmdPitch * pitchRate;
+        motorCmdFrontRight = cmdRoll  + cmdPitch ;
 
         //motorCmdRearLeft = -cmdRoll * rollRate - cmdYaw * yawRate - cmdPitch * pitchRate ;
-        motorCmdRearLeft = -cmdRoll * rollRate - cmdPitch * pitchRate;
+        motorCmdRearLeft = -cmdRoll - cmdPitch ;
 
         //motorCmdRearRight = cmdRoll * rollRate  + cmdYaw * yawRate - cmdPitch * pitchRate ;
-        motorCmdRearRight = cmdRoll * rollRate - cmdPitch * pitchRate;
+        motorCmdRearRight = cmdRoll  - cmdPitch ;
 
-        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft * rcRate;
-        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * rcRate;
-        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft * rcRate;
-        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight * rcRate;
+        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft * rcRate* throttleRate;
+        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * rcRate* throttleRate;
+        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft * rcRate* throttleRate;
+        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight * rcRate* throttleRate;
     }
 
     void FixedUpdate()
     {
-        rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw*yawRate, 0), ForceMode.VelocityChange);
+        rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
         ClampVelocity();
     }
 
     void ClampVelocity()
     {
-        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 14f);
+        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 10f);
     }
 
 

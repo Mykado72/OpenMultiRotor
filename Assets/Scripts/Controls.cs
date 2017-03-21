@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -7,6 +8,7 @@ public class Controls : MonoBehaviour {
 
     public int rcMode;
     public bool joystick;
+    private Mapping mapping;
     public float throttle;
     public float throttleMin;
     public float throttleRate;
@@ -85,16 +87,23 @@ public class Controls : MonoBehaviour {
         motorRearRight.transform.rotation = Quaternion.Euler(Vector3.zero);
 
 
-
         string[] joynames = Input.GetJoystickNames();
+        string joyname = joynames[0];
         if (joynames.Length > 0)
         {
-            if (joynames[0] == "FrSky Taranis Joystick")
-                Debug.Log("Cool RcTransmitter !!!");
-            if (joynames[0] != "")
-                joystick = true;
-            else
+            joyname=joyname.Replace(" ", "");
+            mapping = (Mapping) AssetDatabase.LoadAssetAtPath("Assets/" + joyname + ".asset", typeof(Mapping));
+            if (mapping == null)
+            {
                 joystick = false;
+            }
+            else
+            {
+                joystick = true;
+                // Debug.Log(mapping.pitchAxisName);
+            }
+//            if (joynames[0] == "FrSky Taranis Joystick")
+//               Debug.Log("Cool RcTransmitter !!!");
         }
         else
         {
@@ -112,10 +121,22 @@ public class Controls : MonoBehaviour {
         case 1:
                 if (joystick)
                 {
-                    consignVector.x = Expo(Input.GetAxis("axis0")/rollRate, rollExpo, 0.00002f);    // Roll
-                    consignVector.y = Expo(Input.GetAxis("axis3")/yawRate, yawExpo, 0.0002f);     // Yaw
-                    consignVector.z = -Expo(Input.GetAxis("axis1")/pitchRate, pitchExpo, 0.00002f); // Pitch (Mode1)
-                    throttle = -Input.GetAxis("axis2"); // Input.GetAxis("JoyTrottle(Mode1)-Pitch(Mode2)");
+                    if (mapping.rollAxisInversor == true)
+                        consignVector.x = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString())/rollRate, rollExpo, 0.00002f);    // Roll
+                    else
+                        consignVector.x = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) / rollRate, rollExpo, 0.00002f);    // Roll
+                    if (mapping.yawAxisInversor == true)
+                        consignVector.y = -Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) /yawRate, yawExpo, 0.0002f);     // Yaw
+                    else
+                        consignVector.y = Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) / yawRate, yawExpo, 0.0002f);     // Yaw
+                    if (mapping.pitchAxisInversor == true)
+                        consignVector.z = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) /pitchRate, pitchExpo, 0.00002f); // Pitch 
+                    else
+                        consignVector.z = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) / pitchRate, pitchExpo, 0.00002f); // Pitch 
+                    if (mapping.throttleAxisInversor == true)
+                        throttle = Input.GetAxis("axis" + mapping.throttleAxisNb.ToString()); 
+                    else
+                        throttle = -Input.GetAxis("axis" + mapping.throttleAxisNb.ToString()); 
                 }
                 else
                 {

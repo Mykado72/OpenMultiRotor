@@ -40,5 +40,6 @@ public class AxisMap : MonoBehaviour {
             }
         }
         AssetDatabase.CreateAsset(mapping, "Assets/Mapping.asset");
+        string json = JsonUtility.ToJson(mapping);
     }
 }

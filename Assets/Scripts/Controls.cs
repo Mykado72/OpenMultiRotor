@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 
 public class Controls : MonoBehaviour {
 
+    public PID pidRoll;
+    public PID pidPitch;
     public int rcMode;
     public enum flightModes { Angle, Horizon, Accro };
     public flightModes flightMode;
@@ -123,7 +125,7 @@ public class Controls : MonoBehaviour {
     void Update () {
         
         float Delta = Time.deltaTime;
-        ActualRotationVector = rgChassi.transform.eulerAngles; //  - new Vector3(180, 0, 180);
+        ActualRotationVector = rgChassi.transform.localEulerAngles;
         if (ActualRotationVector.x >= 180)
             ActualRotationVector.x = -(360 - ActualRotationVector.x);
         if (ActualRotationVector.y >= 180)
@@ -136,17 +138,17 @@ public class Controls : MonoBehaviour {
                 if (joystick)
                 {
                     if (mapping.rollAxisInversor == true)
-                        consignVector.x = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString())*rollRate, rollExpo, 0.00002f);    // Roll
+                        consignVector.z = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString())*rollRate, rollExpo, 0.00002f);    // Roll
                     else
-                        consignVector.x = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.00002f);    // Roll
+                        consignVector.z = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.00002f);    // Roll
                     if (mapping.yawAxisInversor == true)
                         consignVector.y = -Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) *yawRate, yawExpo, 0.0002f);     // Yaw
                     else
                         consignVector.y = Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) * yawRate, yawExpo, 0.0002f);     // Yaw
                     if (mapping.pitchAxisInversor == true)
-                        consignVector.z = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) *pitchRate, pitchExpo, 0.00002f); // Pitch 
+                        consignVector.x = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) *pitchRate, pitchExpo, 0.00002f); // Pitch 
                     else
-                        consignVector.z = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.00002f); // Pitch 
+                        consignVector.x = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.00002f); // Pitch 
                     if (mapping.throttleAxisInversor == true)
                         throttle = Input.GetAxis("axis" + mapping.throttleAxisNb.ToString()); 
                     else
@@ -154,27 +156,13 @@ public class Controls : MonoBehaviour {
                 }
                 else
                 {
-                    consignVector.x = Input.GetAxis("KeyRoll");
+                    consignVector.z = Input.GetAxis("KeyRoll");
                     consignVector.y = Input.GetAxis("KeyYaw");
-                    consignVector.z = Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)");
+                    consignVector.x = Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)");
                     throttle = Input.GetAxis("KeyTrottle(Mode1)-Pitch(Mode2)");
                 }
                 break;
         case 2:
-                if (joystick)
-                {
-                    consignVector.x = Input.GetAxis("JoyRoll");
-                    consignVector.y = Input.GetAxis("JoyYaw");
-                    consignVector.z = Input.GetAxis("JoyTrottle(Mode1)-Pitch(Mode2)");
-                    throttle = Input.GetAxis("JoyPitch(Mode1)-Trottle(Mode2)");
-                }
-                else
-                {
-                    consignVector.x = Input.GetAxis("KeyRoll");
-                    consignVector.y = Input.GetAxis("KeyYaw");
-                    consignVector.z = Input.GetAxis("KeyTrottle(Mode1)-Pitch(Mode2)");
-                    throttle = Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)");
-                }
                 break;
         case 3:
             break;
@@ -189,42 +177,45 @@ public class Controls : MonoBehaviour {
         switch (flightMode)
         {
             case flightModes.Angle:
-                AngularConsignVector.x = consignVector.x * rollAngleMax;
-                AngularConsignVector.z = consignVector.z * pitchAngleMax;
+                AngularConsignVector.x = consignVector.x * pitchAngleMax;
+                AngularConsignVector.z = consignVector.z * rollAngleMax;
                 ActualRotationVector.x = Mathf.Round(ActualRotationVector.x);
                 ActualRotationVector.z = -Mathf.Round(ActualRotationVector.z);
-                cmdPitch = -(ActualRotationVector.x - AngularConsignVector.z) * pidstabilisation;
-                cmdRoll = - (ActualRotationVector.z - AngularConsignVector.x) * pidstabilisation;
-                cmdYaw = consignVector.y;
+                // float deltaPitch = (AngularConsignVector.x-ActualRotationVector.x) * pidstabilisation;
+                // float deltaRoll =  (AngularConsignVector.z-ActualRotationVector.z) * pidstabilisation;
+
+                cmdPitch = Mathf.Round(pidPitch.Update(AngularConsignVector.x, ActualRotationVector.x, Time.deltaTime*pitchRate));
+                cmdRoll = Mathf.Round(pidRoll.Update(AngularConsignVector.z, ActualRotationVector.z, Time.deltaTime*rollRate));
+                cmdYaw = consignVector.y*yawRate;
                 break;
             case flightModes.Horizon:
-                cmdRoll = consignVector.x;
-                cmdPitch = consignVector.z;
+                cmdRoll = consignVector.z;
+                cmdPitch = consignVector.x;
                 cmdYaw = consignVector.y;
                 break;
             case flightModes.Accro:
-                cmdRoll = consignVector.x;
-                cmdPitch = consignVector.z;
+                cmdRoll = consignVector.z;
+                cmdPitch = consignVector.x;
                 cmdYaw = consignVector.y;
                 break;
             default:
-                cmdRoll = consignVector.x;
-                cmdPitch = consignVector.z;
+                cmdRoll = consignVector.z;
+                cmdPitch = consignVector.x;
                 cmdYaw = consignVector.y;
                 break;
         }
-        
+
         //motorCmdFrontLeft = -cmdRoll * rollRate  + cmdYaw * yawRate + cmdPitch * pitchRate ;
-        motorCmdFrontLeft = -cmdRoll  + cmdPitch ;
+        motorCmdFrontLeft = -cmdRoll + cmdPitch ;
 
         //motorCmdFrontRight = cmdRoll * rollRate - cmdYaw * yawRate + cmdPitch * pitchRate ;
-        motorCmdFrontRight = cmdRoll  + cmdPitch ;
+        motorCmdFrontRight = cmdRoll + cmdPitch ;
 
         //motorCmdRearLeft = -cmdRoll * rollRate - cmdYaw * yawRate - cmdPitch * pitchRate ;
         motorCmdRearLeft = -cmdRoll - cmdPitch ;
 
         //motorCmdRearRight = cmdRoll * rollRate  + cmdYaw * yawRate - cmdPitch * pitchRate ;
-        motorCmdRearRight = cmdRoll  - cmdPitch ;
+        motorCmdRearRight = cmdRoll - cmdPitch ;
 
         motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft * rcRate* throttleRate;
         motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * rcRate* throttleRate;

@@ -59,7 +59,7 @@ public class MotorRC : MonoBehaviour
         // motCmdSpeed = Mathf.Clamp(motCmdSpeed, 0, motActualVmax);
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            propeler.transform.Rotate(Vector3.forward * (1000+controls.desiredSpeed *0.5f + motActualSpeed*20) * Delta);
+            propeler.transform.Rotate(Vector3.forward * (controls.throttleMin*1.5f+controls.desiredSpeed*0.4f+motActualSpeed*10) * Delta);
         }
         else
         {

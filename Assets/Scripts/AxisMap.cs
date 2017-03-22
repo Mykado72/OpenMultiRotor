@@ -26,9 +26,15 @@ public class AxisMap : MonoBehaviour {
 
     void Start()
     {
-        joynames = Input.GetJoystickNames();
-        joyname = joynames[0];
-        joyname = joyname.Replace(" ", "");
+        string[] joynames = Input.GetJoystickNames();
+        if (joynames.Length > 0)
+        {
+            joyname = joyname.Replace(" ", "");
+        }
+        else
+        {
+
+        }
         mapping = (Mapping)AssetDatabase.LoadAssetAtPath("Assets/" + joyname + ".asset", typeof(Mapping));
         if (mapping == null)
         {

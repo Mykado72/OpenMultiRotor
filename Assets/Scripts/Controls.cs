@@ -7,6 +7,10 @@ using UnityEngine.SceneManagement;
 public class Controls : MonoBehaviour {
 
     public int rcMode;
+    public enum flightModes { Angle, Horizon, Accro };
+    public flightModes flightMode;
+    public int pitchAngleMax = 45;
+    public int rollAngleMax = 45;
     public bool joystick;
     private Mapping mapping;
     public float throttle;
@@ -21,6 +25,8 @@ public class Controls : MonoBehaviour {
     public float rcRate;
     public MotorSet motorSet;
     public Vector3 consignVector;
+    public Vector3 AngularConsignVector;
+    public Vector3 ActualRotationVector;
     public float cmdRoll;
     public float cmdPitch;
     public float cmdYaw;
@@ -115,7 +121,13 @@ public class Controls : MonoBehaviour {
     void Update () {
         
         float Delta = Time.deltaTime;
-
+        ActualRotationVector = rgChassi.transform.eulerAngles; //  - new Vector3(180, 0, 180);
+        if (ActualRotationVector.x >= 180)
+            ActualRotationVector.x = -(360 - ActualRotationVector.x);
+        if (ActualRotationVector.y >= 180)
+            ActualRotationVector.y = -(360 - ActualRotationVector.y);
+        if (ActualRotationVector.z >= 180)
+            ActualRotationVector.z = -(360 - ActualRotationVector.z);
         switch (rcMode)
         {
         case 1:
@@ -171,9 +183,36 @@ public class Controls : MonoBehaviour {
         }
         convertedThrottle = (1 + throttle) / 2 ;
         desiredSpeed = throttleMin + (throttleRate *1000)* convertedThrottle; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
-        cmdRoll = consignVector.x ;
-        cmdPitch = consignVector.z;
-        cmdYaw = consignVector.y ;
+
+        switch (flightMode)
+        {
+            case flightModes.Angle:
+                AngularConsignVector.x = Mathf.Round(consignVector.x*1000)* rollAngleMax;
+                AngularConsignVector.z = Mathf.Round(consignVector.z * 1000) * pitchAngleMax;
+                ActualRotationVector.x= Mathf.Round(ActualRotationVector.x*1000);
+                ActualRotationVector.z = -Mathf.Round(ActualRotationVector.z*1000);
+                // AngularConsignVector.z = consignVector.z * pitchAngleMax;
+                cmdPitch = -(ActualRotationVector.x - AngularConsignVector.z) / 20000;
+                cmdRoll = - (ActualRotationVector.z - AngularConsignVector.x) / 20000;
+                // cmdPitch = consignVector.z;
+                cmdYaw = consignVector.y;
+                break;
+            case flightModes.Horizon:
+                cmdRoll = consignVector.x;
+                cmdPitch = consignVector.z;
+                cmdYaw = consignVector.y;
+                break;
+            case flightModes.Accro:
+                cmdRoll = consignVector.x;
+                cmdPitch = consignVector.z;
+                cmdYaw = consignVector.y;
+                break;
+            default:
+                cmdRoll = consignVector.x;
+                cmdPitch = consignVector.z;
+                cmdYaw = consignVector.y;
+                break;
+        }
         
         //motorCmdFrontLeft = -cmdRoll * rollRate  + cmdYaw * yawRate + cmdPitch * pitchRate ;
         motorCmdFrontLeft = -cmdRoll  + cmdPitch ;

@@ -6,6 +6,7 @@ using UnityEditor;
 
 public class AxisMap : MonoBehaviour {
 
+    enum rcAxis { Pitch, Roll, Yaw, Throttle };
     public Slider [] sliders;
     public Dropdown [] dropdownAxis;
     public string [] axisNames;
@@ -32,7 +33,7 @@ public class AxisMap : MonoBehaviour {
         if (mapping == null)
         {
             Debug.Log("Default");
-            dropdownAxis[0].value=0;
+            dropdownAxis[0].value = 0;
             dropdownAxis[1].value = 1;
             dropdownAxis[2].value = 2;
             dropdownAxis[3].value = 3;
@@ -41,7 +42,7 @@ public class AxisMap : MonoBehaviour {
         else
         {
             Debug.Log(joyname);
-            dropdownAxis[mapping.pitchAxisNb].value = 0; // Pitch
+            dropdownAxis[mapping.pitchAxisNb].value = 0;  // Pitch
             dropdownAxis[mapping.rollAxisNb].value = 1; // Roll
             dropdownAxis[mapping.yawAxisNb].value = 2; // Yaw
             dropdownAxis[mapping.throttleAxisNb].value = 3; // Throttle

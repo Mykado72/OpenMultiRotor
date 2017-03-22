@@ -11,6 +11,8 @@ public class Controls : MonoBehaviour {
     public flightModes flightMode;
     public int pitchAngleMax = 45;
     public int rollAngleMax = 45;
+    public float stabilisationlevel = 0.25f;
+    public float pidstabilisation = 0.25f;
     public bool joystick;
     private Mapping mapping;
     public float throttle;
@@ -189,12 +191,10 @@ public class Controls : MonoBehaviour {
             case flightModes.Angle:
                 AngularConsignVector.x = consignVector.x * rollAngleMax;
                 AngularConsignVector.z = consignVector.z * pitchAngleMax;
-                //ActualRotationVector.x= ActualRotationVector.x;
-                ActualRotationVector.z = -ActualRotationVector.z;
-                // AngularConsignVector.z = consignVector.z * pitchAngleMax;
-                cmdPitch = -(ActualRotationVector.x*0.25f - AngularConsignVector.z) / 25;
-                cmdRoll = - (ActualRotationVector.z*0.25f - AngularConsignVector.x) / 25;
-                // cmdPitch = consignVector.z;
+                ActualRotationVector.x = Mathf.Round(ActualRotationVector.x);
+                ActualRotationVector.z = -Mathf.Round(ActualRotationVector.z);
+                cmdPitch = -(ActualRotationVector.x - AngularConsignVector.z) * pidstabilisation;
+                cmdRoll = - (ActualRotationVector.z - AngularConsignVector.x) * pidstabilisation;
                 cmdYaw = consignVector.y;
                 break;
             case flightModes.Horizon:

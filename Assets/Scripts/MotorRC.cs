@@ -28,7 +28,7 @@ public class MotorRC : MonoBehaviour
         controls = GameObject.Find("Controls").GetComponent<Controls>();
         propeler = transform.GetComponentInChildren<Propeler>();
         rg = transform.GetComponent<Rigidbody>();
-        rg.transform.position = transform.position;
+        rg.transform.position = transform.position+ new Vector3(0,-0.25f,0);
         rg.transform.rotation = transform.rotation;
         rg.isKinematic = true; // clear forces
         rg.isKinematic = false;

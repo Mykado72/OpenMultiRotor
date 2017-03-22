@@ -88,10 +88,10 @@ public class Controls : MonoBehaviour {
 
 
         string[] joynames = Input.GetJoystickNames();
-        string joyname = joynames[0];
         if (joynames.Length > 0)
         {
-            joyname=joyname.Replace(" ", "");
+            string joyname = joynames[0];
+            joyname =joyname.Replace(" ", "");
             mapping = (Mapping) AssetDatabase.LoadAssetAtPath("Assets/" + joyname + ".asset", typeof(Mapping));
             if (mapping == null)
             {

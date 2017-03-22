@@ -187,13 +187,13 @@ public class Controls : MonoBehaviour {
         switch (flightMode)
         {
             case flightModes.Angle:
-                AngularConsignVector.x = Mathf.Round(consignVector.x*1000)* rollAngleMax;
-                AngularConsignVector.z = Mathf.Round(consignVector.z * 1000) * pitchAngleMax;
-                ActualRotationVector.x= Mathf.Round(ActualRotationVector.x*1000);
-                ActualRotationVector.z = -Mathf.Round(ActualRotationVector.z*1000);
+                AngularConsignVector.x = consignVector.x * rollAngleMax;
+                AngularConsignVector.z = consignVector.z * pitchAngleMax;
+                //ActualRotationVector.x= ActualRotationVector.x;
+                ActualRotationVector.z = -ActualRotationVector.z;
                 // AngularConsignVector.z = consignVector.z * pitchAngleMax;
-                cmdPitch = -(ActualRotationVector.x - AngularConsignVector.z) / 20000;
-                cmdRoll = - (ActualRotationVector.z - AngularConsignVector.x) / 20000;
+                cmdPitch = -(ActualRotationVector.x*0.25f - AngularConsignVector.z) / 25;
+                cmdRoll = - (ActualRotationVector.z*0.25f - AngularConsignVector.x) / 25;
                 // cmdPitch = consignVector.z;
                 cmdYaw = consignVector.y;
                 break;

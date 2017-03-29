@@ -2,8 +2,8 @@
 using UnityEngine;
 
 [Serializable]
-[CreateAssetMenu()]
-public class Mapping : ScriptableObject
+
+public class Mapping
 {
     public int pitchAxisNb;
     public int rollAxisNb;
@@ -13,4 +13,16 @@ public class Mapping : ScriptableObject
     public bool rollAxisInversor;
     public bool yawAxisInversor;
     public bool throttleAxisInversor;
+
+    public Mapping()
+    {
+        pitchAxisNb=0;
+        rollAxisNb=0;
+        yawAxisNb=0;
+        throttleAxisNb=0;
+        pitchAxisInversor=false;
+        rollAxisInversor = false;
+        yawAxisInversor = false;
+        throttleAxisInversor = false;
+    }
 }

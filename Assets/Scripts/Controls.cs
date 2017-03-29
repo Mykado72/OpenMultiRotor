@@ -1,8 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Controls : MonoBehaviour {
 
@@ -16,7 +19,8 @@ public class Controls : MonoBehaviour {
     public float stabilisationlevel = 0.25f;
     public float pidstabilisation = 0.25f;
     public bool joystick;
-    private Mapping mapping;
+    public AxisMap axisMap;
+    public Mapping mapping;
     public float throttle;
     public float throttleMin;
     public float throttleRate;
@@ -45,17 +49,25 @@ public class Controls : MonoBehaviour {
     private float motorCmdRearLeft;
     public Rigidbody motorRearRight;
     private float motorCmdRearRight;
-    public string joystickname;
     public Vector3 spawnPosition;
     public Quaternion spawnRotation;
+    public Button mapbutton;
 
     // Use this for initialization
-    void  Awake () {
-
+    void  Awake () {        
     }
 
     void Start()
     {
+        if (axisMap.joystickDetected==true)
+        {
+            mapping = axisMap.mapping;
+            joystick = true;
+        }
+        else
+        {
+            joystick = false;
+        }       
         rgChassi.transform.gameObject.SetActive(false);
         rgChassi.transform.gameObject.SetActive(true);
         rgChassi.transform.position = spawnPosition;
@@ -95,36 +107,22 @@ public class Controls : MonoBehaviour {
         motorRearRight.isKinematic = false;
         motorRearRight.angularVelocity = Vector3.zero;
         motorRearRight.transform.rotation = Quaternion.Euler(Vector3.zero);
-
-
-        string[] joynames = Input.GetJoystickNames();
-        if (joynames.Length > 0)
-        {
-            string joyname = joynames[0];
-            joyname =joyname.Replace(" ", "");
-            mapping = (Mapping) AssetDatabase.LoadAssetAtPath("Assets/" + joyname + ".asset", typeof(Mapping));
-            if (mapping == null)
-            {
-                joystick = false;
-            }
-            else
-            {
-                joystick = true;
-                // Debug.Log(mapping.pitchAxisName);
-            }
-//            if (joynames[0] == "FrSky Taranis Joystick")
-//               Debug.Log("Cool RcTransmitter !!!");
-        }
-        else
-        {
-            joystick = false;
-        }
     }
 
     // Update is called once per frame
     void Update () {
-        
         float Delta = Time.deltaTime;
+        if (axisMap.joystickDetected == true)
+        {
+            mapping = axisMap.mapping;
+            joystick = true;
+            mapbutton.interactable = true;
+        }
+        else
+        {
+            joystick = false;
+            mapbutton.interactable = false;
+        }
         ActualRotationVector = rgChassi.transform.localEulerAngles;
         if (ActualRotationVector.x >= 180)
             ActualRotationVector.x = -(360 - ActualRotationVector.x);

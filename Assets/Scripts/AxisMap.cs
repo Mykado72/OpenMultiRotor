@@ -27,18 +27,21 @@ public class AxisMap : MonoBehaviour {
     void Start()
     {
         string[] joynames = Input.GetJoystickNames();
+
         if (joynames.Length > 0)
         {
+            joyname = joynames[0];
             joyname = joyname.Replace(" ", "");
         }
         else
         {
-
+            joyname = null;
         }
+        var assetfind = AssetDatabase.FindAssets(joyname, null);
         mapping = (Mapping)AssetDatabase.LoadAssetAtPath("Assets/" + joyname + ".asset", typeof(Mapping));
-        if (mapping == null)
+        if ((joyname == null)||(assetfind.Length==0))
         {
-            Debug.Log("Default");
+            Debug.Log("pas trouvé de mapping pour "+joyname+", chargement des valeurs par défaut");
             dropdownAxis[0].value = 0;
             dropdownAxis[1].value = 1;
             dropdownAxis[2].value = 2;

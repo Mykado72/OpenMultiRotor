@@ -98,10 +98,10 @@ public class MotorRC : MonoBehaviour
     void FloorEffect()
     {
         floorDistance = FloorDistance();
-        if (floorDistance > 0 & floorDistance < 0.3f)
+        if (floorDistance > 0 & floorDistance < 0.45f)
         {
             // Debug.Log("Floor Effect " + floorDistance);
-            floorEffect = controls.desiredSpeed / (floorDistance*1000000);
+            floorEffect = controls.desiredSpeed / (floorDistance*300000);
             rg.AddRelativeForce(Vector3.up * floorEffect, ForceMode.Force);
         }
         else

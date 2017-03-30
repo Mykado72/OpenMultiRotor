@@ -9,15 +9,14 @@ using UnityEngine.UI;
 
 public class Controls : MonoBehaviour {
 
-    public PID pidRoll;
-    public PID pidPitch;
+    private float delta;
+    public PIDSet pidSet;
     public int rcMode;
     public enum flightModes { Angle, Horizon, Accro };
     public flightModes flightMode;
     public int pitchAngleMax = 45;
     public int rollAngleMax = 45;
-    public float stabilisationlevel = 0.25f;
-    public float pidstabilisation = 0.25f;
+    public float stabspeed = 0.25f;
     public bool joystick;
     public AxisMap axisMap;
     public Mapping mapping;
@@ -111,7 +110,36 @@ public class Controls : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-        float Delta = Time.deltaTime;
+        delta = Time.deltaTime;
+        RotationCorrection();
+        GetControls();
+        convertedThrottle = (1 + throttle) / 2 ;
+        desiredSpeed = throttleMin + (throttleRate *1000)* convertedThrottle; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
+        //FlightMode();
+        SendCmdToMotors();
+    }
+
+    void FixedUpdate()
+    {
+        FlightMode();
+        if (Mathf.Abs(cmdYaw)>0)
+            rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
+        ClampVelocity();
+    }
+
+    void RotationCorrection()
+    {
+        ActualRotationVector = rgChassi.transform.localEulerAngles;
+        if (ActualRotationVector.x >= 180)
+            ActualRotationVector.x = -(360 - ActualRotationVector.x);
+        if (ActualRotationVector.y >= 180)
+            ActualRotationVector.y = -(360 - ActualRotationVector.y);
+        if (ActualRotationVector.z >= 180)
+            ActualRotationVector.z = -(360 - ActualRotationVector.z);
+    }
+
+    void GetControls()
+    {
         if (axisMap.joystickDetected == true)
         {
             mapping = axisMap.mapping;
@@ -123,68 +151,51 @@ public class Controls : MonoBehaviour {
             joystick = false;
             mapbutton.interactable = false;
         }
-        ActualRotationVector = rgChassi.transform.localEulerAngles;
-        if (ActualRotationVector.x >= 180)
-            ActualRotationVector.x = -(360 - ActualRotationVector.x);
-        if (ActualRotationVector.y >= 180)
-            ActualRotationVector.y = -(360 - ActualRotationVector.y);
-        if (ActualRotationVector.z >= 180)
-            ActualRotationVector.z = -(360 - ActualRotationVector.z);
-        switch (rcMode)
+        if (joystick)
         {
-        case 1:
-                if (joystick)
-                {
-                    if (mapping.rollAxisInversor == true)
-                        consignVector.z = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString())*rollRate, rollExpo, 0.00002f);    // Roll
-                    else
-                        consignVector.z = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.00002f);    // Roll
-                    if (mapping.yawAxisInversor == true)
-                        consignVector.y = -Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) *yawRate, yawExpo, 0.0002f);     // Yaw
-                    else
-                        consignVector.y = Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) * yawRate, yawExpo, 0.0002f);     // Yaw
-                    if (mapping.pitchAxisInversor == true)
-                        consignVector.x = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) *pitchRate, pitchExpo, 0.00002f); // Pitch 
-                    else
-                        consignVector.x = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.00002f); // Pitch 
-                    if (mapping.throttleAxisInversor == true)
-                        throttle = Input.GetAxis("axis" + mapping.throttleAxisNb.ToString()); 
-                    else
-                        throttle = -Input.GetAxis("axis" + mapping.throttleAxisNb.ToString()); 
-                }
-                else
-                {
-                    consignVector.z = Input.GetAxis("KeyRoll");
-                    consignVector.y = Input.GetAxis("KeyYaw");
-                    consignVector.x = Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)");
-                    throttle = Input.GetAxis("KeyTrottle(Mode1)-Pitch(Mode2)");
-                }
-                break;
-        case 2:
-                break;
-        case 3:
-            break;
-        case 4:
-            break;
-        default:
-            break;
+            if (mapping.rollAxisInversor == true)
+                consignVector.z = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.00002f);    // Roll
+            else
+                consignVector.z = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.00002f);    // Roll
+            if (mapping.yawAxisInversor == true)
+                consignVector.y = -Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) * yawRate, yawExpo, 0.0002f);     // Yaw
+            else
+                consignVector.y = Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) * yawRate, yawExpo, 0.0002f);     // Yaw
+            if (mapping.pitchAxisInversor == true)
+                consignVector.x = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.00002f); // Pitch 
+            else
+                consignVector.x = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.00002f); // Pitch 
+            if (mapping.throttleAxisInversor == true)
+                throttle = Input.GetAxis("axis" + mapping.throttleAxisNb.ToString());
+            else
+                throttle = -Input.GetAxis("axis" + mapping.throttleAxisNb.ToString());
         }
-        convertedThrottle = (1 + throttle) / 2 ;
-        desiredSpeed = throttleMin + (throttleRate *1000)* convertedThrottle; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
-
+        else
+        {
+            consignVector.z = Expo(Input.GetAxis("KeyRoll") * rollRate, rollExpo, 0.00002f);
+            consignVector.y = Expo(Input.GetAxis("KeyYaw") * yawRate, yawExpo, 0.0002f);
+            consignVector.x = Expo(Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)")* pitchRate, pitchExpo, 0.00002f);
+            throttle = Input.GetAxis("KeyTrottle(Mode1)-Pitch(Mode2)");
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+    }
+    void FlightMode()
+    {
         switch (flightMode)
         {
             case flightModes.Angle:
                 AngularConsignVector.x = consignVector.x * pitchAngleMax;
                 AngularConsignVector.z = consignVector.z * rollAngleMax;
+                AngularConsignVector.y = consignVector.y * yawRate;
                 ActualRotationVector.x = Mathf.Round(ActualRotationVector.x);
                 ActualRotationVector.z = -Mathf.Round(ActualRotationVector.z);
-                // float deltaPitch = (AngularConsignVector.x-ActualRotationVector.x) * pidstabilisation;
-                // float deltaRoll =  (AngularConsignVector.z-ActualRotationVector.z) * pidstabilisation;
-
-                cmdPitch = Mathf.Round(pidPitch.Update(AngularConsignVector.x, ActualRotationVector.x, Time.deltaTime*pitchRate));
-                cmdRoll = Mathf.Round(pidRoll.Update(AngularConsignVector.z, ActualRotationVector.z, Time.deltaTime*rollRate));
-                cmdYaw = consignVector.y*yawRate;
+                cmdPitch = Mathf.Round(pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed));
+                cmdRoll = Mathf.Round(pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed));
+                cmdYaw = consignVector.y * yawRate;
+                // cmdYaw = Mathf.Round(pidSet.yawPID.Update(AngularConsignVector.y, ActualRotationVector.y, stabspeed * delta));  
                 break;
             case flightModes.Horizon:
                 cmdRoll = consignVector.z;
@@ -202,34 +213,22 @@ public class Controls : MonoBehaviour {
                 cmdYaw = consignVector.y;
                 break;
         }
-
-        //motorCmdFrontLeft = -cmdRoll * rollRate  + cmdYaw * yawRate + cmdPitch * pitchRate ;
-        motorCmdFrontLeft = -cmdRoll + cmdPitch ;
-
-        //motorCmdFrontRight = cmdRoll * rollRate - cmdYaw * yawRate + cmdPitch * pitchRate ;
-        motorCmdFrontRight = cmdRoll + cmdPitch ;
-
-        //motorCmdRearLeft = -cmdRoll * rollRate - cmdYaw * yawRate - cmdPitch * pitchRate ;
-        motorCmdRearLeft = -cmdRoll - cmdPitch ;
-
-        //motorCmdRearRight = cmdRoll * rollRate  + cmdYaw * yawRate - cmdPitch * pitchRate ;
-        motorCmdRearRight = cmdRoll - cmdPitch ;
-
-        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft * rcRate* throttleRate;
-        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * rcRate* throttleRate;
-        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft * rcRate* throttleRate;
-        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight * rcRate* throttleRate;
     }
-
-    void FixedUpdate()
+    void SendCmdToMotors()
     {
-        rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
-        ClampVelocity();
+        motorCmdFrontLeft = -cmdRoll + cmdPitch;
+        motorCmdFrontRight = cmdRoll + cmdPitch;
+        motorCmdRearLeft = -cmdRoll - cmdPitch;
+        motorCmdRearRight = cmdRoll - cmdPitch;
+        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft * rcRate * throttleRate;
+        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * rcRate * throttleRate;
+        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft * rcRate * throttleRate;
+        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight * rcRate * throttleRate;
     }
-
     void ClampVelocity()
     {
-        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 10f);
+        // rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 10f);
+        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 15f);
     }
 
 

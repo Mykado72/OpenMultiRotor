@@ -49,8 +49,8 @@ public class Controls : MonoBehaviour {
     private float motorCmdRearLeft;
     public Rigidbody motorRearRight;
     private float motorCmdRearRight;
-    public Vector3 spawnPosition;
-    public Quaternion spawnRotation;
+    public Transform spawnTransform;
+//     public Quaternion spawnRotation;
     public Button mapbutton;
 
     // Use this for initialization
@@ -70,8 +70,8 @@ public class Controls : MonoBehaviour {
         }       
         rgChassi.transform.gameObject.SetActive(false);
         rgChassi.transform.gameObject.SetActive(true);
-        rgChassi.transform.position = spawnPosition;
-        rgChassi.transform.rotation = Quaternion.Euler(Vector3.zero);
+        rgChassi.transform.position = spawnTransform.position;
+        rgChassi.transform.rotation = spawnTransform.rotation;
         rgChassi.isKinematic = true; // clear forces
         rgChassi.isKinematic = false; 
         rgChassi.velocity = Vector3.zero;
@@ -80,7 +80,7 @@ public class Controls : MonoBehaviour {
         rgChassi.ResetInertiaTensor();
         // rgChassi.centerOfMass = new Vector3(0,-0.001f,0); // descendre le centre de gravité rend plus mou
 
-        motorFrontLeft.transform.gameObject.SetActive(false);
+        /* motorFrontLeft.transform.gameObject.SetActive(false);
         motorFrontLeft.transform.gameObject.SetActive(true);
         motorFrontLeft.isKinematic=true;
         motorFrontLeft.isKinematic = false;
@@ -106,7 +106,7 @@ public class Controls : MonoBehaviour {
         motorRearRight.isKinematic = true;
         motorRearRight.isKinematic = false;
         motorRearRight.angularVelocity = Vector3.zero;
-        motorRearRight.transform.rotation = Quaternion.Euler(Vector3.zero);
+        motorRearRight.transform.rotation = Quaternion.Euler(Vector3.zero);   */
     }
 
     // Update is called once per frame

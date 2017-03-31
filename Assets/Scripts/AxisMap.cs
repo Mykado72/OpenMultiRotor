@@ -197,26 +197,29 @@ public class AxisMap : MonoBehaviour
             joystickDetected = false;
         }
         else
-        {
+        {   
+            if (joystickDetected==false) // pour le faire qu'une fois
+            {
+                if (File.Exists(Application.persistentDataPath + "/" + joyname + ".ControlerMap"))
+                {
+                    mapping = LoadMappings(joyname);
+                    Debug.Log(joyname);
+                    dropdownAxis[mapping.pitchAxisNb].value = 0;  // Pitch
+                    dropdownAxis[mapping.rollAxisNb].value = 1; // Roll
+                    dropdownAxis[mapping.yawAxisNb].value = 2; // Yaw
+                    dropdownAxis[mapping.throttleAxisNb].value = 3; // Throttle
+                }
+                else
+                {
+                    Debug.Log("pas trouvé de mapping pour " + joyname + ", chargement des valeurs par défaut");
+                    dropdownAxis[0].value = 0;
+                    dropdownAxis[1].value = 1;
+                    dropdownAxis[2].value = 2;
+                    dropdownAxis[3].value = 3;
+                    dropdownAxis[4].value = 4;
+                }
+            }
             joystickDetected = true;
-            if (File.Exists(Application.persistentDataPath + "/" + joyname + ".ControlerMap"))
-            {
-                mapping = LoadMappings(joyname);
-                Debug.Log(joyname);
-                dropdownAxis[mapping.pitchAxisNb].value = 0;  // Pitch
-                dropdownAxis[mapping.rollAxisNb].value = 1; // Roll
-                dropdownAxis[mapping.yawAxisNb].value = 2; // Yaw
-                dropdownAxis[mapping.throttleAxisNb].value = 3; // Throttle
-            }
-            else
-            {
-                Debug.Log("pas trouvé de mapping pour " + joyname + ", chargement des valeurs par défaut");
-                dropdownAxis[0].value = 0;
-                dropdownAxis[1].value = 1;
-                dropdownAxis[2].value = 2;
-                dropdownAxis[3].value = 3;
-                dropdownAxis[4].value = 4;
-            }
         }
     }
 }

@@ -13,7 +13,8 @@ public class Controls : MonoBehaviour {
     public PIDSet pidSet;
     public int rcMode;
     public enum flightModes { Angle, Horizon, Accro };
-    public flightModes flightMode;
+    public Dropdown flightMode;
+    // public flightModes flightMode;
     public int pitchAngleMax = 45;
     public int rollAngleMax = 45;
     public float stabspeed = 0.25f;
@@ -184,9 +185,9 @@ public class Controls : MonoBehaviour {
     }
     void FlightMode()
     {
-        switch (flightMode)
+        switch (flightMode.value)
         {
-            case flightModes.Angle:
+            case 0:  // angle
                 AngularConsignVector.x = consignVector.x * pitchAngleMax;
                 AngularConsignVector.z = consignVector.z * rollAngleMax;
                 AngularConsignVector.y = consignVector.y * yawRate;
@@ -197,12 +198,12 @@ public class Controls : MonoBehaviour {
                 cmdYaw = consignVector.y * yawRate;
                 // cmdYaw = Mathf.Round(pidSet.yawPID.Update(AngularConsignVector.y, ActualRotationVector.y, stabspeed * delta));  
                 break;
-            case flightModes.Horizon:
+            case 2: // horizon
                 cmdRoll = consignVector.z;
                 cmdPitch = consignVector.x;
                 cmdYaw = consignVector.y;
                 break;
-            case flightModes.Accro:
+            case 1: // acro
                 cmdRoll = consignVector.z;
                 cmdPitch = consignVector.x;
                 cmdYaw = consignVector.y;

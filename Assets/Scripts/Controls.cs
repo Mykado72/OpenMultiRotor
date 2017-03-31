@@ -30,7 +30,7 @@ public class Controls : MonoBehaviour {
     public float pitchExpo;
     public float yawRate;
     public float yawExpo;
-    public float rcRate;
+    public float accroRate;
     public MotorSet motorSet;
     public Vector3 consignVector;
     public Vector3 AngularConsignVector;
@@ -199,13 +199,13 @@ public class Controls : MonoBehaviour {
                 // cmdYaw = Mathf.Round(pidSet.yawPID.Update(AngularConsignVector.y, ActualRotationVector.y, stabspeed * delta));  
                 break;
             case 2: // horizon
-                cmdRoll = consignVector.z;
-                cmdPitch = consignVector.x;
+                cmdRoll = consignVector.z* accroRate; 
+                cmdPitch = consignVector.x* accroRate; 
                 cmdYaw = consignVector.y;
                 break;
             case 1: // acro
-                cmdRoll = consignVector.z;
-                cmdPitch = consignVector.x;
+                cmdRoll = consignVector.z* accroRate; ;
+                cmdPitch = consignVector.x* accroRate; ;
                 cmdYaw = consignVector.y;
                 break;
             default:
@@ -221,15 +221,15 @@ public class Controls : MonoBehaviour {
         motorCmdFrontRight = cmdRoll + cmdPitch;
         motorCmdRearLeft = -cmdRoll - cmdPitch;
         motorCmdRearRight = cmdRoll - cmdPitch;
-        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft * rcRate * throttleRate;
-        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * rcRate * throttleRate;
-        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft * rcRate * throttleRate;
-        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight * rcRate * throttleRate;
+        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft *  throttleRate;
+        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * throttleRate;
+        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft * throttleRate;
+        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight * throttleRate;
     }
     void ClampVelocity()
     {
         // rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 10f);
-        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 15f);
+        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 12f);
     }
 
 

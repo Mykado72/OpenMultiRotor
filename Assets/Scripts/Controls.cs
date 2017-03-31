@@ -155,17 +155,17 @@ public class Controls : MonoBehaviour {
         if (joystick)
         {
             if (mapping.rollAxisInversor == true)
-                consignVector.z = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.00002f);    // Roll
+                consignVector.z = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.0002f);    // Roll
             else
-                consignVector.z = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.00002f);    // Roll
+                consignVector.z = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.0002f);    // Roll
             if (mapping.yawAxisInversor == true)
                 consignVector.y = -Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) * yawRate, yawExpo, 0.0002f);     // Yaw
             else
                 consignVector.y = Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) * yawRate, yawExpo, 0.0002f);     // Yaw
             if (mapping.pitchAxisInversor == true)
-                consignVector.x = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.00002f); // Pitch 
+                consignVector.x = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.0002f); // Pitch 
             else
-                consignVector.x = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.00002f); // Pitch 
+                consignVector.x = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.0002f); // Pitch 
             if (mapping.throttleAxisInversor == true)
                 throttle = Input.GetAxis("axis" + mapping.throttleAxisNb.ToString());
             else

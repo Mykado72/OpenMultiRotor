@@ -155,17 +155,17 @@ public class Controls : MonoBehaviour {
         if (joystick)
         {
             if (mapping.rollAxisInversor == true)
-                consignVector.z = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.0002f);    // Roll
+                consignVector.z = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()), rollExpo, 0.0002f);    // Roll
             else
-                consignVector.z = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()) * rollRate, rollExpo, 0.0002f);    // Roll
+                consignVector.z = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()), rollExpo, 0.0002f);    // Roll
             if (mapping.yawAxisInversor == true)
-                consignVector.y = -Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) * yawRate, yawExpo, 0.0002f);     // Yaw
+                consignVector.y = -Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()), yawExpo, 0.0002f);     // Yaw
             else
-                consignVector.y = Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()) * yawRate, yawExpo, 0.0002f);     // Yaw
+                consignVector.y = Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()), yawExpo, 0.0002f);     // Yaw
             if (mapping.pitchAxisInversor == true)
-                consignVector.x = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.0002f); // Pitch 
+                consignVector.x = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()), pitchExpo, 0.0002f); // Pitch 
             else
-                consignVector.x = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()) * pitchRate, pitchExpo, 0.0002f); // Pitch 
+                consignVector.x = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()), pitchExpo, 0.0002f); // Pitch 
             if (mapping.throttleAxisInversor == true)
                 throttle = Input.GetAxis("axis" + mapping.throttleAxisNb.ToString());
             else
@@ -173,9 +173,9 @@ public class Controls : MonoBehaviour {
         }
         else
         {
-            consignVector.z = Expo(Input.GetAxis("KeyRoll") * rollRate, rollExpo, 0.00002f);
-            consignVector.y = Expo(Input.GetAxis("KeyYaw") * yawRate, yawExpo, 0.0002f);
-            consignVector.x = Expo(Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)")* pitchRate, pitchExpo, 0.00002f);
+            consignVector.z = Expo(Input.GetAxis("KeyRoll"), rollExpo, 0.00002f);
+            consignVector.y = Expo(Input.GetAxis("KeyYaw"), yawExpo, 0.0002f);
+            consignVector.x = Expo(Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)"), pitchExpo, 0.00002f);
             throttle = Input.GetAxis("KeyTrottle(Mode1)-Pitch(Mode2)");
         }
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -200,19 +200,19 @@ public class Controls : MonoBehaviour {
                 // cmdYaw = Mathf.Round(pidSet.yawPID.Update(AngularConsignVector.y, ActualRotationVector.y, stabspeed * delta));  
                 break;
             case 2: // horizon
-                cmdRoll = consignVector.z* accroRate; 
-                cmdPitch = consignVector.x* accroRate; 
-                cmdYaw = consignVector.y;
+                cmdRoll = consignVector.z* accroRate * rollRate; 
+                cmdPitch = consignVector.x* accroRate * pitchRate; 
+                cmdYaw = consignVector.y *yawRate;
                 break;
             case 1: // acro
-                cmdRoll = consignVector.z* accroRate; ;
-                cmdPitch = consignVector.x* accroRate; ;
-                cmdYaw = consignVector.y;
+                cmdRoll = consignVector.z* accroRate* rollRate; 
+                cmdPitch = consignVector.x* accroRate * pitchRate ;
+                cmdYaw = consignVector.y* yawRate;
                 break;
             default:
-                cmdRoll = consignVector.z;
-                cmdPitch = consignVector.x;
-                cmdYaw = consignVector.y;
+                cmdRoll = consignVector.z * accroRate * rollRate;
+                cmdPitch = consignVector.x * accroRate * pitchRate;
+                cmdYaw = consignVector.y * yawRate;
                 break;
         }
     }

@@ -116,13 +116,13 @@ public class Controls : MonoBehaviour {
         GetControls();
         convertedThrottle = (1 + throttle) / 2 ;
         desiredSpeed = throttleMin + (throttleRate *1000)* convertedThrottle; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
-        FlightMode();
+        //FlightMode();
         SendCmdToMotors();
     }
 
     void FixedUpdate()
     {
-        //FlightMode();
+        FlightMode();
         if (Mathf.Abs(cmdYaw)>0)
             rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
         ClampVelocity();
@@ -185,6 +185,7 @@ public class Controls : MonoBehaviour {
     }
     void FlightMode()
     {
+        float fixeddelta = Time.fixedDeltaTime;
         switch (flightMode.value)
         {
             case 0:  // angle
@@ -193,8 +194,8 @@ public class Controls : MonoBehaviour {
                 AngularConsignVector.y = consignVector.y * yawRate;
                 ActualRotationVector.x = Mathf.Round(ActualRotationVector.x);
                 ActualRotationVector.z = -Mathf.Round(ActualRotationVector.z);
-                cmdPitch = Mathf.Round(pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed*delta));
-                cmdRoll = Mathf.Round(pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed*delta));
+                cmdPitch = Mathf.Round(pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed* fixeddelta));
+                cmdRoll = Mathf.Round(pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed* fixeddelta));
                 cmdYaw = consignVector.y * yawRate;
                 // cmdYaw = Mathf.Round(pidSet.yawPID.Update(AngularConsignVector.y, ActualRotationVector.y, stabspeed * delta));  
                 break;

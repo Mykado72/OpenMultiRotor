@@ -13,6 +13,14 @@ public class Damage : MonoBehaviour {
     {
         Debug.Log("A joint has just been broken!, force: " + breakForce);
         transform.GetComponent<Rigidbody>().useGravity = true;
-    }  
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        Debug.Log("Collision à la vitesse :" + collision.relativeVelocity.magnitude+ " de " + this.name + " avec " + collision.gameObject.name);
+
+        // if (collision.relativeVelocity.magnitude > 10)
+            // this.GetComponentInParent<Rigidbody>().useGravity = true;
+    }
 
 }

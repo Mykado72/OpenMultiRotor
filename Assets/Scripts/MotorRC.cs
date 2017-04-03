@@ -51,7 +51,7 @@ public class MotorRC : MonoBehaviour
 
     void Update()
     {
-        float Delta = Time.deltaTime;
+        float Delta = Time.deltaTime;        
         if (motActualSpeed < motCmdSpeed)
             motActualSpeed += motActualAcc;
         else if (motActualSpeed > motCmdSpeed)
@@ -59,7 +59,7 @@ public class MotorRC : MonoBehaviour
         // motCmdSpeed = Mathf.Clamp(motCmdSpeed, 0, motActualVmax);
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            propeler.transform.Rotate(Vector3.forward * (controls.throttleMin*1.5f+controls.desiredSpeed*0.4f+motActualSpeed*10) * Delta);
+            propeler.transform.Rotate(Vector3.forward * (500+motActualSpeed*4) * Delta);
         }
         else
         {
@@ -69,15 +69,9 @@ public class MotorRC : MonoBehaviour
 
     void FixedUpdate()
     {
-        float torque;
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            motForceTrust = (controls.desiredSpeed/1000)+(controls.throttleRate * (motActualSpeed / 240) * propeler.propThrust);
-            if (anticlockwise == true)
-                torque = -(motCmdSpeed / 2) - rg.angularVelocity.y;
-            else
-                torque = (motCmdSpeed / 2) - rg.angularVelocity.y;
-            //rg.AddRelativeTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
+            motForceTrust = (motCmdSpeed / 120) * propeler.propThrust;
             rg.AddRelativeForce(new Vector3(0, motForceTrust, 0), ForceMode.Force);
             FloorEffect();
         }
@@ -98,11 +92,11 @@ public class MotorRC : MonoBehaviour
     void FloorEffect()
     {
         floorDistance = FloorDistance();
-        if (floorDistance > 0 & floorDistance < 0.45f)
+        if (floorDistance > 0 & floorDistance < 20f)
         {
             // Debug.Log("Floor Effect " + floorDistance);
-            floorEffect = controls.desiredSpeed / (floorDistance*300000);
-            rg.AddRelativeForce(Vector3.up * floorEffect, ForceMode.Force);
+            floorEffect = controls.desiredSpeed / (floorDistance*80);
+            rg.AddRelativeForce(Vector3.up * floorEffect, ForceMode.Acceleration);
         }
         else
         {

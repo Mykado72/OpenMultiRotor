@@ -22,7 +22,7 @@ public class Controls : MonoBehaviour {
     public AxisMap axisMap;
     public Mapping mapping;
     public float throttle;
-    public float throttleMin;
+    public float minimalSpeed;
     public float throttleRate;
     public float rollRate;
     public float rollExpo;
@@ -115,7 +115,7 @@ public class Controls : MonoBehaviour {
         RotationCorrection();
         GetControls();
         convertedThrottle = (1 + throttle) / 2 ;
-        desiredSpeed = throttleMin + (throttleRate *1000)* convertedThrottle; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
+        // desiredSpeed = (throttleRate)* convertedThrottle*100; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
         //FlightMode();
         SendCmdToMotors();
     }
@@ -123,8 +123,9 @@ public class Controls : MonoBehaviour {
     void FixedUpdate()
     {
         FlightMode();
-        if (Mathf.Abs(cmdYaw)>0)
-            rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
+        //if (Mathf.Abs(cmdYaw)>0)
+        //    rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
+        rgChassi.AddRelativeTorque(new Vector3(cmdPitch, cmdYaw, -cmdRoll), ForceMode.VelocityChange);
         ClampVelocity();
     }
 
@@ -192,10 +193,10 @@ public class Controls : MonoBehaviour {
                 AngularConsignVector.x = consignVector.x * pitchAngleMax;
                 AngularConsignVector.z = consignVector.z * rollAngleMax;
                 AngularConsignVector.y = consignVector.y * yawRate;
-                ActualRotationVector.x = Mathf.Round(ActualRotationVector.x);
-                ActualRotationVector.z = -Mathf.Round(ActualRotationVector.z);
-                cmdPitch = Mathf.Round(pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed* fixeddelta));
-                cmdRoll = Mathf.Round(pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed* fixeddelta));
+                //ActualRotationVector.x = Mathf.Round(ActualRotationVector.x);
+                ActualRotationVector.z = -ActualRotationVector.z;
+                cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed* fixeddelta);
+                cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed* fixeddelta);
                 cmdYaw = consignVector.y * yawRate;
                 // cmdYaw = Mathf.Round(pidSet.yawPID.Update(AngularConsignVector.y, ActualRotationVector.y, stabspeed * delta));  
                 break;
@@ -205,8 +206,8 @@ public class Controls : MonoBehaviour {
                 cmdYaw = consignVector.y *yawRate;
                 break;
             case 1: // acro
-                cmdRoll = consignVector.z* accroRate* rollRate; 
-                cmdPitch = consignVector.x* accroRate * pitchRate ;
+                cmdRoll = (consignVector.z* accroRate)* rollRate; 
+                cmdPitch = (consignVector.x* accroRate) * pitchRate;
                 cmdYaw = consignVector.y* yawRate;
                 break;
             default:
@@ -222,10 +223,11 @@ public class Controls : MonoBehaviour {
         motorCmdFrontRight = cmdRoll + cmdPitch;
         motorCmdRearLeft = -cmdRoll - cmdPitch;
         motorCmdRearRight = cmdRoll - cmdPitch;
-        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft *  throttleRate;
-        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight * throttleRate;
-        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft * throttleRate;
-        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight * throttleRate;
+        desiredSpeed = minimalSpeed + convertedThrottle* throttleRate;
+        motorSet.motorSet[0].motCmdSpeed = desiredSpeed;// + motorCmdFrontLeft* motorSet.motorSet[0].motActualAcc*0.5f;// *  throttleRate;
+        motorSet.motorSet[1].motCmdSpeed = desiredSpeed;// + motorCmdFrontRight* motorSet.motorSet[1].motActualAcc*0.5f; // * throttleRate;
+        motorSet.motorSet[2].motCmdSpeed = desiredSpeed;// + motorCmdRearLeft* motorSet.motorSet[2].motActualAcc*0.5f; // * throttleRate;
+        motorSet.motorSet[3].motCmdSpeed = desiredSpeed;// + motorCmdRearRight* motorSet.motorSet[3].motActualAcc*0.5f; // * throttleRate;
     }
     void ClampVelocity()
     {

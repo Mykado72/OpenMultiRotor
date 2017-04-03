@@ -67,7 +67,7 @@ public class MotorRC : MonoBehaviour
     {
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            motForceTrust = (hoverSpeed / 120) * propeler.propThrust;
+            motForceTrust = (hoverSpeed) * propeler.propThrust+ (motCmdSpeed);
             rg.AddRelativeForce(new Vector3(0, motForceTrust, 0), ForceMode.Force);
             FloorEffect();
         }
@@ -88,10 +88,10 @@ public class MotorRC : MonoBehaviour
     void FloorEffect()
     {
         floorDistance = FloorDistance();
-        if (floorDistance > 0 & floorDistance < 20f)
+        if (floorDistance > 0 & floorDistance < 0.45f)
         {
             // Debug.Log("Floor Effect " + floorDistance);
-            floorEffect = controls.desiredSpeed / (floorDistance*80);
+            floorEffect = controls.desiredSpeed / (floorDistance*20);
             rg.AddRelativeForce(Vector3.up * floorEffect, ForceMode.Acceleration);
         }
         else

@@ -124,9 +124,11 @@ public class Controls : MonoBehaviour {
     void FixedUpdate()
     {
         FlightMode();
-        //if (Mathf.Abs(cmdYaw)>0)
-        //    rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
-        rgChassi.AddRelativeTorque(new Vector3(cmdPitch, cmdYaw, -cmdRoll), ForceMode.VelocityChange);
+        if (Mathf.Abs(cmdYaw)>0)
+            rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
+        // rgChassi.AddRelativeTorque(new Vector3(cmdPitch, cmdYaw, -cmdRoll), ForceMode.VelocityChange);
+        // Quaternion deltaRotation = Quaternion.Euler(new Vector3(cmdPitch*2, cmdYaw*2, -cmdRoll*2));
+        // rgChassi.MoveRotation(rgChassi.rotation * deltaRotation);
         ClampVelocity();
     }
 
@@ -139,6 +141,7 @@ public class Controls : MonoBehaviour {
             ActualRotationVector.y = -(360 - ActualRotationVector.y);
         if (ActualRotationVector.z >= 180)
             ActualRotationVector.z = -(360 - ActualRotationVector.z);
+        
     }
 
     void GetControls()
@@ -175,9 +178,9 @@ public class Controls : MonoBehaviour {
         }
         else
         {
-            consignVector.z = Expo(Input.GetAxis("KeyRoll"), rollExpo, 0.00002f);
+            consignVector.z = Expo(Input.GetAxis("KeyRoll"), rollExpo, 0.0002f);
             consignVector.y = Expo(Input.GetAxis("KeyYaw"), yawExpo, 0.0002f);
-            consignVector.x = Expo(Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)"), pitchExpo, 0.00002f);
+            consignVector.x = Expo(Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)"), pitchExpo, 0.0002f);
             throttle = Input.GetAxis("KeyTrottle(Mode1)-Pitch(Mode2)");
         }
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -207,8 +210,8 @@ public class Controls : MonoBehaviour {
                 cmdYaw = consignVector.y *yawRate;
                 break;
             case 1: // acro
-                cmdRoll = (consignVector.z* accroRate)* rollRate; 
-                cmdPitch = (consignVector.x* accroRate) * pitchRate;
+                cmdRoll = (consignVector.z* rollRate * accroRate); 
+                cmdPitch = (consignVector.x* pitchRate* accroRate);
                 cmdYaw = consignVector.y* yawRate;
                 break;
             default:
@@ -220,24 +223,24 @@ public class Controls : MonoBehaviour {
     }
     void SendCmdToMotors()
     {
-        motorCmdFrontLeft = -cmdRoll + cmdPitch;
-        motorCmdFrontRight = cmdRoll + cmdPitch;
-        motorCmdRearLeft = -cmdRoll - cmdPitch;
-        motorCmdRearRight = cmdRoll - cmdPitch;
-        desiredSpeed = minimalSpeed + convertedThrottle* throttleRate;
+        motorCmdFrontLeft = (-cmdRoll + cmdPitch) * throttleRate;
+        motorCmdFrontRight =( cmdRoll + cmdPitch )* throttleRate;
+        motorCmdRearLeft = (-cmdRoll - cmdPitch )* throttleRate;
+        motorCmdRearRight = (cmdRoll - cmdPitch) * throttleRate;
+        desiredSpeed = (minimalSpeed + throttle) * throttleRate;
         motorSet.motorSet[0].hoverSpeed = desiredSpeed;
         motorSet.motorSet[1].hoverSpeed = desiredSpeed;
         motorSet.motorSet[2].hoverSpeed = desiredSpeed;
         motorSet.motorSet[3].hoverSpeed = desiredSpeed;
-        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft*100;// + motorCmdFrontLeft* motorSet.motorSet[0].motActualAcc*0.5f;// *  throttleRate;
-        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight*100;// + motorCmdFrontRight* motorSet.motorSet[1].motActualAcc*0.5f; // * throttleRate;
-        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft*100;// + motorCmdRearLeft* motorSet.motorSet[2].motActualAcc*0.5f; // * throttleRate;
-        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight*100;// + motorCmdRearRight* motorSet.motorSet[3].motActualAcc*0.5f; // * throttleRate;
+        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft;// + motorCmdFrontLeft* motorSet.motorSet[0].motActualAcc*0.5f;// *  throttleRate;
+        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight;// + motorCmdFrontRight* motorSet.motorSet[1].motActualAcc*0.5f; // * throttleRate;
+        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft;// + motorCmdRearLeft* motorSet.motorSet[2].motActualAcc*0.5f; // * throttleRate;
+        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight;// + motorCmdRearRight* motorSet.motorSet[3].motActualAcc*0.5f; // * throttleRate;
     }
     void ClampVelocity()
     {
         // rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 10f);
-        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 30f);
+        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 35f);
     }
 
 

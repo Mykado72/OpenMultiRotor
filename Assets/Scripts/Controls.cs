@@ -23,6 +23,7 @@ public class Controls : MonoBehaviour {
     public Mapping mapping;
     public float throttle;
     public float minimalSpeed;
+    public float minimalRotationSpeed;
     public float throttleRate;
     public float rollRate;
     public float rollExpo;
@@ -224,10 +225,14 @@ public class Controls : MonoBehaviour {
         motorCmdRearLeft = -cmdRoll - cmdPitch;
         motorCmdRearRight = cmdRoll - cmdPitch;
         desiredSpeed = minimalSpeed + convertedThrottle* throttleRate;
-        motorSet.motorSet[0].motCmdSpeed = desiredSpeed;// + motorCmdFrontLeft* motorSet.motorSet[0].motActualAcc*0.5f;// *  throttleRate;
-        motorSet.motorSet[1].motCmdSpeed = desiredSpeed;// + motorCmdFrontRight* motorSet.motorSet[1].motActualAcc*0.5f; // * throttleRate;
-        motorSet.motorSet[2].motCmdSpeed = desiredSpeed;// + motorCmdRearLeft* motorSet.motorSet[2].motActualAcc*0.5f; // * throttleRate;
-        motorSet.motorSet[3].motCmdSpeed = desiredSpeed;// + motorCmdRearRight* motorSet.motorSet[3].motActualAcc*0.5f; // * throttleRate;
+        motorSet.motorSet[0].hoverSpeed = desiredSpeed;
+        motorSet.motorSet[1].hoverSpeed = desiredSpeed;
+        motorSet.motorSet[2].hoverSpeed = desiredSpeed;
+        motorSet.motorSet[3].hoverSpeed = desiredSpeed;
+        motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft*100;// + motorCmdFrontLeft* motorSet.motorSet[0].motActualAcc*0.5f;// *  throttleRate;
+        motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight*100;// + motorCmdFrontRight* motorSet.motorSet[1].motActualAcc*0.5f; // * throttleRate;
+        motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft*100;// + motorCmdRearLeft* motorSet.motorSet[2].motActualAcc*0.5f; // * throttleRate;
+        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight*100;// + motorCmdRearRight* motorSet.motorSet[3].motActualAcc*0.5f; // * throttleRate;
     }
     void ClampVelocity()
     {

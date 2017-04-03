@@ -11,7 +11,7 @@ public class MotorRC : MonoBehaviour
     public float motTmax;
     public float motWeight;
     public float motActualVmax;
-
+    public float hoverSpeed;
     public bool anticlockwise;
     public float motActualAcc;
     public float motActualSpeed;
@@ -52,14 +52,10 @@ public class MotorRC : MonoBehaviour
     void Update()
     {
         float Delta = Time.deltaTime;        
-        if (motActualSpeed < motCmdSpeed)
-            motActualSpeed += motActualAcc;
-        else if (motActualSpeed > motCmdSpeed)
-            motActualSpeed -= motActualAcc;
         // motCmdSpeed = Mathf.Clamp(motCmdSpeed, 0, motActualVmax);
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            propeler.transform.Rotate(Vector3.forward * (500+motActualSpeed*4) * Delta);
+            propeler.transform.Rotate(Vector3.forward * (controls.minimalRotationSpeed + (hoverSpeed*8 + motCmdSpeed*2)) * Delta);
         }
         else
         {
@@ -71,7 +67,7 @@ public class MotorRC : MonoBehaviour
     {
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            motForceTrust = (motCmdSpeed / 120) * propeler.propThrust;
+            motForceTrust = (hoverSpeed / 120) * propeler.propThrust;
             rg.AddRelativeForce(new Vector3(0, motForceTrust, 0), ForceMode.Force);
             FloorEffect();
         }

@@ -240,7 +240,7 @@ public class Controls : MonoBehaviour {
     void ClampVelocity()
     {
         // rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 10f);
-        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 35f);
+        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 25f);
     }
 
 

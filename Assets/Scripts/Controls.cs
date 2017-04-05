@@ -12,6 +12,7 @@ public class Controls : MonoBehaviour {
     public bool AIControl;
     private float delta;
     public PIDSet pidSet;
+    public PIDSet AIControlPID;
     public int rcMode;
     public enum flightModes { Angle, Horizon, Accro };
     public Dropdown flightMode;
@@ -54,9 +55,14 @@ public class Controls : MonoBehaviour {
     public Transform spawnTransform;
 //     public Quaternion spawnRotation;
     public Button mapbutton;
+    public WaypointSystem waypointSystem;
+    public int waypointnb;
+    public Transform targetWaypoint;
 
     // Use this for initialization
-    void  Awake () {        
+    void  Awake () {
+        waypointnb = 0;
+        targetWaypoint= waypointSystem.waypoints[waypointnb];
     }
 
     void Start()
@@ -119,7 +125,14 @@ public class Controls : MonoBehaviour {
         convertedThrottle = (1 + throttle) / 2 ;
         // desiredSpeed = (throttleRate)* convertedThrottle*100; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
         //FlightMode();
-        SendCmdToMotors();
+        if (AIControl == true)
+        {
+            SendCmdToMotors();
+        }
+        else
+        {
+            SendCmdToMotors();
+        }       
     }
 
     void FixedUpdate()
@@ -138,17 +151,27 @@ public class Controls : MonoBehaviour {
         if (ActualRotationVector.y >= 180)
             ActualRotationVector.y = -(360 - ActualRotationVector.y);
         if (ActualRotationVector.z >= 180)
-            ActualRotationVector.z = -(360 - ActualRotationVector.z);
-        
+            ActualRotationVector.z = -(360 - ActualRotationVector.z);      
     }
 
     void GetControls()
     {
         if (AIControl == true)
         {
-            consignVector.z = 0;
+            // Vector3 direction = -Quaternion.LookRotation(targetWaypoint.position - rgChassi.transform.position).ToEulerAngles();
+            //Vector3 direction = Vector3.Normalize(targetWaypoint.position - rgChassi.position);
+            //Debug.Log(direction);
+            consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(targetWaypoint.position.z, rgChassi.position.z, stabspeed*delta),-1f,+1f);
+            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(targetWaypoint.position.x, rgChassi.position.x, stabspeed * delta),-1f,+1f);
+
             consignVector.y = 0;
-            consignVector.x = 0;
+            // cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed * fixeddelta);
+            // consignVector = Vector3.Normalize(direction);
+            // consignVector.z = -direction.x;
+            // consignVector.x = -direction.z;
+            //Debug.Log(consignVector);
+            // consignVector = (targetWaypoint.position.x - rgChassi.transform.position.x);
+            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta), -1f, +1f);
         }
         else // c'est un joueur
         {
@@ -230,11 +253,20 @@ public class Controls : MonoBehaviour {
     }
     void SendCmdToMotors()
     {
-        motorCmdFrontLeft = (-cmdRoll + cmdPitch) * throttleRate;
-        motorCmdFrontRight =( cmdRoll + cmdPitch )* throttleRate;
-        motorCmdRearLeft = (-cmdRoll - cmdPitch )* throttleRate;
-        motorCmdRearRight = (cmdRoll - cmdPitch) * throttleRate;
-        desiredSpeed = (minimalSpeed + throttle) * throttleRate;
+        if (AIControl == true)
+        {
+            motorCmdFrontRight = (cmdRoll + cmdPitch) * throttleRate;
+            motorCmdRearLeft = (-cmdRoll - cmdPitch) * throttleRate;
+            motorCmdRearRight = (cmdRoll - cmdPitch) * throttleRate;
+            desiredSpeed = (minimalSpeed + throttle) * throttleRate;
+        }
+        else
+        {
+            motorCmdFrontRight = (cmdRoll + cmdPitch) * throttleRate;
+            motorCmdRearLeft = (-cmdRoll - cmdPitch) * throttleRate;
+            motorCmdRearRight = (cmdRoll - cmdPitch) * throttleRate;
+            desiredSpeed = (minimalSpeed + throttle) * throttleRate;
+        }
         motorSet.motorSet[0].hoverSpeed = desiredSpeed;
         motorSet.motorSet[1].hoverSpeed = desiredSpeed;
         motorSet.motorSet[2].hoverSpeed = desiredSpeed;
@@ -242,7 +274,7 @@ public class Controls : MonoBehaviour {
         motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft;// + motorCmdFrontLeft* motorSet.motorSet[0].motActualAcc*0.5f;// *  throttleRate;
         motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight;// + motorCmdFrontRight* motorSet.motorSet[1].motActualAcc*0.5f; // * throttleRate;
         motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft;// + motorCmdRearLeft* motorSet.motorSet[2].motActualAcc*0.5f; // * throttleRate;
-        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight;// + motorCmdRearRight* motorSet.motorSet[3].motActualAcc*0.5f; // * throttleRate;
+        motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight;// + motorCmdRearRight* motorSet.motorSet[3].motActualAcc*0.5f; // * throttleRate;     
     }
     void ClampVelocity()
     {

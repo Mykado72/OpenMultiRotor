@@ -19,13 +19,13 @@ public class MotorRC : MonoBehaviour
     public float motForceTrust;
     public float floorEffect;
     public float floorDistance;
-    private Controls controls;
+    public Controls controls;
     private Propeler propeler;
     private Rigidbody rg;
 
     void Awake()
     {
-        controls = GameObject.Find("Controls").GetComponent<Controls>();
+        // controls = transform.parent.Find("Controls").GetComponent<Controls>();
         propeler = transform.GetComponentInChildren<Propeler>();
         rg = transform.GetComponent<Rigidbody>();
         // rg.transform.position = new Vector3(transform.position.x, 0, transform.position.z);  

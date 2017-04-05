@@ -9,6 +9,7 @@ using UnityEngine.UI;
 
 public class Controls : MonoBehaviour {
 
+    public bool AIControl;
     private float delta;
     public PIDSet pidSet;
     public int rcMode;
@@ -59,7 +60,7 @@ public class Controls : MonoBehaviour {
     }
 
     void Start()
-    {
+    {   
         if (axisMap.joystickDetected==true)
         {
             mapping = axisMap.mapping;
@@ -126,9 +127,6 @@ public class Controls : MonoBehaviour {
         FlightMode();
         if (Mathf.Abs(cmdYaw)>0)
             rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
-        // rgChassi.AddRelativeTorque(new Vector3(cmdPitch, cmdYaw, -cmdRoll), ForceMode.VelocityChange);
-        // Quaternion deltaRotation = Quaternion.Euler(new Vector3(cmdPitch*2, cmdYaw*2, -cmdRoll*2));
-        // rgChassi.MoveRotation(rgChassi.rotation * deltaRotation);
         ClampVelocity();
     }
 
@@ -146,46 +144,55 @@ public class Controls : MonoBehaviour {
 
     void GetControls()
     {
-        if (axisMap.joystickDetected == true)
+        if (AIControl == true)
         {
-            mapping = axisMap.mapping;
-            joystick = true;
-            mapbutton.interactable = true;
+            consignVector.z = 0;
+            consignVector.y = 0;
+            consignVector.x = 0;
         }
-        else
+        else // c'est un joueur
         {
-            joystick = false;
-            mapbutton.interactable = false;
-        }
-        if (joystick)
-        {
-            if (mapping.rollAxisInversor == true)
-                consignVector.z = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()), rollExpo, 0.0002f);    // Roll
+            if (axisMap.joystickDetected == true)
+            {
+                mapping = axisMap.mapping;
+                joystick = true;
+                mapbutton.interactable = true;
+            }
+            else 
+            {
+                joystick = false;
+                mapbutton.interactable = false;
+            }
+            if (joystick)
+            {
+                if (mapping.rollAxisInversor == true)
+                    consignVector.z = -Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()), rollExpo, 0.0002f);    // Roll
+                else
+                    consignVector.z = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()), rollExpo, 0.0002f);    // Roll
+                if (mapping.yawAxisInversor == true)
+                    consignVector.y = -Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()), yawExpo, 0.0002f);     // Yaw
+                else
+                    consignVector.y = Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()), yawExpo, 0.0002f);     // Yaw
+                if (mapping.pitchAxisInversor == true)
+                    consignVector.x = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()), pitchExpo, 0.0002f); // Pitch 
+                else
+                    consignVector.x = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()), pitchExpo, 0.0002f); // Pitch 
+                if (mapping.throttleAxisInversor == true)
+                    throttle = Input.GetAxis("axis" + mapping.throttleAxisNb.ToString());
+                else
+                    throttle = -Input.GetAxis("axis" + mapping.throttleAxisNb.ToString());
+            }
             else
-                consignVector.z = Expo(Input.GetAxis("axis" + mapping.rollAxisNb.ToString()), rollExpo, 0.0002f);    // Roll
-            if (mapping.yawAxisInversor == true)
-                consignVector.y = -Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()), yawExpo, 0.0002f);     // Yaw
-            else
-                consignVector.y = Expo(Input.GetAxis("axis" + mapping.yawAxisNb.ToString()), yawExpo, 0.0002f);     // Yaw
-            if (mapping.pitchAxisInversor == true)
-                consignVector.x = Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()), pitchExpo, 0.0002f); // Pitch 
-            else
-                consignVector.x = -Expo(Input.GetAxis("axis" + mapping.pitchAxisNb.ToString()), pitchExpo, 0.0002f); // Pitch 
-            if (mapping.throttleAxisInversor == true)
-                throttle = Input.GetAxis("axis" + mapping.throttleAxisNb.ToString());
-            else
-                throttle = -Input.GetAxis("axis" + mapping.throttleAxisNb.ToString());
-        }
-        else
-        {
-            consignVector.z = Expo(Input.GetAxis("KeyRoll"), rollExpo, 0.0002f);
-            consignVector.y = Expo(Input.GetAxis("KeyYaw"), yawExpo, 0.0002f);
-            consignVector.x = Expo(Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)"), pitchExpo, 0.0002f);
-            throttle = Input.GetAxis("KeyTrottle(Mode1)-Pitch(Mode2)");
-        }
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Application.Quit();
+            {
+                consignVector.z = Expo(Input.GetAxis("KeyRoll"), rollExpo, 0.0002f);
+                consignVector.y = Expo(Input.GetAxis("KeyYaw"), yawExpo, 0.0002f);
+                consignVector.x = Expo(Input.GetAxis("KeyPitch(Mode1)-Trottle(Mode2)"), pitchExpo, 0.0002f);
+                throttle = Input.GetAxis("KeyTrottle(Mode1)-Pitch(Mode2)");
+            }
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
+            }
         }
     }
     void FlightMode()

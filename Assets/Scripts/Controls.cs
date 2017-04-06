@@ -165,14 +165,21 @@ public class Controls : MonoBehaviour {
     {
         if (AIControl == true)
         {
-            RelativeWaypointPosition= rgChassi.transform.InverseTransformPoint(targetWaypoint.position);
+            Vector3 targetDir = targetWaypoint.position - rgChassi.transform.position;
+            targetDir.y = 0;
+            Quaternion rotation = Quaternion.LookRotation(targetDir);
+            rgChassi.MoveRotation(Quaternion.Slerp(rgChassi.rotation, rotation, delta * 2f));
+            // Vector3 forward = rgChassi.transform.forward;
+            RelativeWaypointPosition = rgChassi.transform.InverseTransformPoint(targetWaypoint.position);
             QRelativeWaypointRotation = Quaternion.Inverse(rgChassi.rotation) * targetWaypoint.rotation;
+            /// Quaternion rotation = Quaternion.Euler(0, rgChassi.rotation.y- QRelativeWaypointRotation.eulerAngles.y, 0);
+            // Debug.Log(rotation);
             // Quaternion rotationDelta = Quaternion.FromToRotation(rgChassi.transform.forward, targetWaypoint.transform.forward);
             // RelativeWaypointRotation = (Quaternion.Inverse(targetWaypoint.rotation) * rgChassi.rotation).eulerAngles;
             // newRot = (rgChassi.rotation * rotationDelta).eulerAngles; 
             RelativeWaypointRotation = (RelativeWaypointPosition - rgChassi.position);  // angle entre l
             // RelativeWaypointRotation.y = 0; // pour que cela soit coplanaire.
-            rotationDelta = Quaternion.LookRotation(RelativeWaypointRotation);
+            rotationDelta = Quaternion.LookRotation(targetWaypoint.position);
             rotationDeltaEuler = rotationDelta.eulerAngles;
             Transform fauxtransform = rgChassi.transform;
             // Debug.Log(fauxtransform.rotation.y);
@@ -183,23 +190,21 @@ public class Controls : MonoBehaviour {
             Vector3 consignRotation = rotationDeltaEuler; // -rgChassi.rotation.eulerAngles;
             // float angle = 360-FindDegree(RelativeWaypointPosition.x, RelativeWaypointPosition.z);
             float angle = Quaternion.Angle(rgChassi.rotation, QRelativeWaypointRotation); // angle de la cible par rapport au monde
+            // angle = Vector3.Angle(targetDir, -forward);
+            // angle *= Mathf.Sign(Vector3.Cross(forward, targetDir).y);
+            // Debug.Log(angle);  
+
+
             float relangle = Quaternion.Angle(rgChassi.rotation, Quaternion.identity );  // angle du chassi par rapport au monde
-            //if (angle >= 180)
-            //    angle -= angle;
-            float totalAngle = angle+ rgChassi.rotation.eulerAngles.y;
-            if (totalAngle >= 180)
-                totalAngle -= totalAngle;
-            Debug.Log(angle +"  "+ relangle);
-            consignRotation.y = Vector3.Dot(RelativeWaypointRotation, rgChassi.transform.forward);
-            //if (consignRotation.y >= 180)
-            //    consignRotation.y -= consignRotation.y;
-            //Debug.Log(consignRotation);
+
+            //Debug.Log(angleToGo); // rgChassi.transform.eulerAngles.y) ;
             // consignVector.y = consignRotation.y;
-             //consignVector.z = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed*delta),-1f,+1f);
-             //consignVector.x = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.z + RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta),-1f,+1f);
-             // consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(consignRotation.y, rgChassi.rotation.eulerAngles.y, stabspeed * delta), -1f, 1f);
-             //throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta), -1f, +1f);        
-             throttle = -1.0f;
+            consignVector.z = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.x+RelativeWaypointPosition.x, rgChassi.position.x, stabspeed*delta),-1f,+1f);
+            consignVector.x = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.z+RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta),-1f,+1f);
+            // consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(angle, rgChassi.rotation.eulerAngles.y, stabspeed * delta), -1f, +1f);
+            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta), -1f, +1f);
+
+            //throttle = -1.0f;
         }
         else // c'est un joueur
         {

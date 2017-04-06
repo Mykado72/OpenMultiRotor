@@ -9,6 +9,7 @@ using UnityEngine.UI;
 
 public class Controls : MonoBehaviour {
 
+    public Transform cg;
     public bool AIControl;
     private float delta;
     public PIDSet pidSet;
@@ -58,6 +59,10 @@ public class Controls : MonoBehaviour {
     public WaypointSystem waypointSystem;
     public int waypointnb;
     public Transform targetWaypoint;
+    public Vector3 RelativeWaypointPosition;
+    public Vector3 RelativeWaypointRotation;
+    public Quaternion rotationDelta;
+    public Vector3 newRot;
 
     // Use this for initialization
     void  Awake () {
@@ -86,7 +91,7 @@ public class Controls : MonoBehaviour {
         rgChassi.maxAngularVelocity = 10; // Mathf.Infinity;
         rgChassi.angularVelocity = Vector3.zero;
         rgChassi.ResetInertiaTensor();
-        // rgChassi.centerOfMass = new Vector3(0,-0.001f,0); // descendre le centre de gravité rend plus mou
+        // rgChassi.centerOfMass = cg.position; // descendre le centre de gravité rend plus mou
 
         /* motorFrontLeft.transform.gameObject.SetActive(false);
         motorFrontLeft.transform.gameObject.SetActive(true);
@@ -158,20 +163,23 @@ public class Controls : MonoBehaviour {
     {
         if (AIControl == true)
         {
-            // Vector3 direction = -Quaternion.LookRotation(targetWaypoint.position - rgChassi.transform.position).ToEulerAngles();
-            //Vector3 direction = Vector3.Normalize(targetWaypoint.position - rgChassi.position);
-            //Debug.Log(direction);
-            consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(targetWaypoint.position.z, rgChassi.position.z, stabspeed*delta),-1f,+1f);
-            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(targetWaypoint.position.x, rgChassi.position.x, stabspeed * delta),-1f,+1f);
+            RelativeWaypointPosition= rgChassi.transform.InverseTransformPoint(targetWaypoint.position);
+            // RelativeWaypointRotation = Quaternion.Inverse(rgChassi.rotation) * targetWaypoint.rotation;
+            Quaternion rotationDelta = Quaternion.FromToRotation(rgChassi.transform.forward, targetWaypoint.transform.forward);
+            RelativeWaypointRotation = (Quaternion.Inverse(targetWaypoint.rotation) * rgChassi.rotation).eulerAngles;
+            newRot = (rgChassi.rotation * rotationDelta).eulerAngles; 
+            if (RelativeWaypointRotation.x >= 180)
+                RelativeWaypointRotation.x = -(360 - RelativeWaypointRotation.x);
+            if (RelativeWaypointRotation.y >= 180)
+                RelativeWaypointRotation.y = -(360 - RelativeWaypointRotation.y);
+            if (RelativeWaypointRotation.z >= 180)
+                RelativeWaypointRotation.z = -(360 - RelativeWaypointRotation.z);
 
-            consignVector.y = 0;
-            // cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed * fixeddelta);
-            // consignVector = Vector3.Normalize(direction);
-            // consignVector.z = -direction.x;
-            // consignVector.x = -direction.z;
-            //Debug.Log(consignVector);
-            // consignVector = (targetWaypoint.position.x - rgChassi.transform.position.x);
-            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta), -1f, +1f);
+            consignVector.z = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed*delta),-1f,+1f);
+            consignVector.x = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.z + RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta),-1f,+1f);
+            // consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(RelativeWaypointRotation.y, rgChassi.rotation.eulerAngles.y, stabspeed * delta), -1f, 1f);
+            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta), -1f, +1f);        
+            // throttle = -1.0f;
         }
         else // c'est un joueur
         {
@@ -295,4 +303,5 @@ public class Controls : MonoBehaviour {
         else
             return 0f;
     }
+
 }

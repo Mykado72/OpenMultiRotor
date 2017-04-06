@@ -30,8 +30,8 @@ public class Stab : MonoBehaviour {
         // Debug.Log(vpredictedUp);
         // Vector3 torqueVector = Vector3.Cross(predictedUp, Vector3.up);
         // rgChassi.AddTorque(torqueVector * speed * speed);
-        anglePitch = rgChassi.transform.rotation.eulerAngles.x;
-        angleRoll = rgChassi.transform.rotation.eulerAngles.z;
+        anglePitch = rgChassi.rotation.eulerAngles.x;
+        angleRoll = rgChassi.rotation.eulerAngles.z;
         //transform.up //+y axis
         //transform.forward //+z axis
         // transform.right //+x axis

@@ -168,43 +168,16 @@ public class Controls : MonoBehaviour {
             Vector3 targetDir = targetWaypoint.position - rgChassi.transform.position;
             targetDir.y = 0;
             Quaternion rotation = Quaternion.LookRotation(targetDir);
-            rgChassi.MoveRotation(Quaternion.Slerp(rgChassi.rotation, rotation, delta * 2f));
-            // Vector3 forward = rgChassi.transform.forward;
+            //rgChassi.MoveRotation(Quaternion.Slerp(rgChassi.rotation, Quaternion.Euler(rgChassi.rotation.eulerAngles.x, rotation.eulerAngles.y, rgChassi.rotation.z), delta));
+            // rgChassi.MoveRotation(Quaternion.Slerp(rgChassi.rotation, Quaternion.Euler(rotation.eulerAngles.x, rotation.eulerAngles.y, rotation.eulerAngles.z), delta*4));
             RelativeWaypointPosition = rgChassi.transform.InverseTransformPoint(targetWaypoint.position);
-            QRelativeWaypointRotation = Quaternion.Inverse(rgChassi.rotation) * targetWaypoint.rotation;
-            /// Quaternion rotation = Quaternion.Euler(0, rgChassi.rotation.y- QRelativeWaypointRotation.eulerAngles.y, 0);
-            // Debug.Log(rotation);
-            // Quaternion rotationDelta = Quaternion.FromToRotation(rgChassi.transform.forward, targetWaypoint.transform.forward);
-            // RelativeWaypointRotation = (Quaternion.Inverse(targetWaypoint.rotation) * rgChassi.rotation).eulerAngles;
-            // newRot = (rgChassi.rotation * rotationDelta).eulerAngles; 
-            RelativeWaypointRotation = (RelativeWaypointPosition - rgChassi.position);  // angle entre l
-            // RelativeWaypointRotation.y = 0; // pour que cela soit coplanaire.
-            rotationDelta = Quaternion.LookRotation(targetWaypoint.position);
-            rotationDeltaEuler = rotationDelta.eulerAngles;
-            Transform fauxtransform = rgChassi.transform;
-            // Debug.Log(fauxtransform.rotation.y);
-            // Debug.Log(Vector3.Dot(RelativeWaypointRotation, rgChassi.transform.forward));
-            if (rotationDeltaEuler.y >= 180)
-                rotationDeltaEuler.y -= rotationDeltaEuler.y;
-            // Debug.Log(rotationDeltaEuler.y);
-            Vector3 consignRotation = rotationDeltaEuler; // -rgChassi.rotation.eulerAngles;
-            // float angle = 360-FindDegree(RelativeWaypointPosition.x, RelativeWaypointPosition.z);
-            float angle = Quaternion.Angle(rgChassi.rotation, QRelativeWaypointRotation); // angle de la cible par rapport au monde
-            // angle = Vector3.Angle(targetDir, -forward);
-            // angle *= Mathf.Sign(Vector3.Cross(forward, targetDir).y);
-            // Debug.Log(angle);  
+            //float angle = Quaternion.Angle(rgChassi.rotation, QRelativeWaypointRotation); // angle de la cible par rapport au monde
+            // float relangle = Quaternion.Angle(rgChassi.rotation, Quaternion.identity );  // angle du chassi par rapport au monde
+            consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rotation.eulerAngles.y, rgChassi.rotation.eulerAngles.y, stabspeed * delta), -1f, +1f);
+            consignVector.z = (consignVector.y*0.95f)+Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x+ RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta), -1f, +1f);
+            consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.z+RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta),-1f,+1f);
 
-
-            float relangle = Quaternion.Angle(rgChassi.rotation, Quaternion.identity );  // angle du chassi par rapport au monde
-
-            //Debug.Log(angleToGo); // rgChassi.transform.eulerAngles.y) ;
-            // consignVector.y = consignRotation.y;
-            consignVector.z = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.x+RelativeWaypointPosition.x, rgChassi.position.x, stabspeed*delta),-1f,+1f);
-            consignVector.x = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.z+RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta),-1f,+1f);
-            // consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(angle, rgChassi.rotation.eulerAngles.y, stabspeed * delta), -1f, +1f);
             throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta), -1f, +1f);
-
-            //throttle = -1.0f;
         }
         else // c'est un joueur
         {
@@ -262,10 +235,10 @@ public class Controls : MonoBehaviour {
                 AngularConsignVector.y = consignVector.y * yawRate;
                 //ActualRotationVector.x = Mathf.Round(ActualRotationVector.x);
                 ActualRotationVector.z = -ActualRotationVector.z;
-                cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed* fixeddelta);
-                cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed* fixeddelta);
-                cmdYaw = consignVector.y * yawRate;
-                // cmdYaw = Mathf.Round(pidSet.yawPID.Update(AngularConsignVector.y, ActualRotationVector.y, stabspeed * delta));  
+                    cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed * fixeddelta);
+                    cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed * fixeddelta);
+                    cmdYaw = consignVector.y * yawRate;
+                    // cmdYaw = Mathf.Round(pidSet.yawPID.Update(AngularConsignVector.y, ActualRotationVector.y, stabspeed * delta));  
                 break;
             case 2: // horizon
                 cmdRoll = consignVector.z* accroRate * rollRate; 

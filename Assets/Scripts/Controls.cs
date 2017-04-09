@@ -141,24 +141,33 @@ public class Controls : MonoBehaviour {
             SendCmdToMotors();
         }       
     }
-
+    
     void FixedUpdate()
     {
         FlightMode();
-        if (Mathf.Abs(cmdYaw)>0)
-            rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0), ForceMode.VelocityChange);
         ClampVelocity();
+    }
+
+    void LateUpdate()
+    {
+        if (Mathf.Abs(cmdYaw) > 0)
+        {
+            //rgChassi.AddRelativeTorque(new Vector3(0, cmdYaw, 0)+rgChassi.transform.up, ForceMode.VelocityChange);            
+            rotationDelta = Quaternion.AngleAxis(cmdYaw, rgChassi.transform.up);
+            // rgChassi.MoveRotation(rgChassi.rotation * rotationDelta);
+        }
     }
 
     void RotationCorrection()
     {
-        ActualRotationVector = rgChassi.transform.localEulerAngles;
+        ActualRotationVector = rgChassi.rotation.eulerAngles;
+        // ActualRotationVector.y = Quaternion.AngleAxis(0, rgChassi.transform.up);
         if (ActualRotationVector.x >= 180)
             ActualRotationVector.x = -(360 - ActualRotationVector.x);
         if (ActualRotationVector.y >= 180)
             ActualRotationVector.y = -(360 - ActualRotationVector.y);
         if (ActualRotationVector.z >= 180)
-            ActualRotationVector.z = -(360 - ActualRotationVector.z);      
+            ActualRotationVector.z = -(360 - ActualRotationVector.z);
     }
 
     void GetControls()
@@ -233,27 +242,25 @@ public class Controls : MonoBehaviour {
                 AngularConsignVector.x = consignVector.x * pitchAngleMax;
                 AngularConsignVector.z = consignVector.z * rollAngleMax;
                 AngularConsignVector.y = consignVector.y * yawRate;
-                //ActualRotationVector.x = Mathf.Round(ActualRotationVector.x);
-                ActualRotationVector.z = -ActualRotationVector.z;
-                    cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed * fixeddelta);
-                    cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, ActualRotationVector.z, stabspeed * fixeddelta);
-                    cmdYaw = consignVector.y * yawRate;
-                    // cmdYaw = Mathf.Round(pidSet.yawPID.Update(AngularConsignVector.y, ActualRotationVector.y, stabspeed * delta));  
+                cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed * fixeddelta);
+                cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, -ActualRotationVector.z, stabspeed * fixeddelta);
+                cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y + ActualRotationVector.y, ActualRotationVector.y, stabspeed * delta);
+                // cmdYaw = 0;
                 break;
             case 2: // horizon
                 cmdRoll = consignVector.z* accroRate * rollRate; 
                 cmdPitch = consignVector.x* accroRate * pitchRate; 
-                cmdYaw = consignVector.y *yawRate;
+                cmdYaw = consignVector.y *yawRate * accroRate;
                 break;
             case 1: // acro
-                cmdRoll = (consignVector.z* rollRate * accroRate); 
-                cmdPitch = (consignVector.x* pitchRate* accroRate);
-                cmdYaw = consignVector.y* yawRate;
+                cmdRoll = consignVector.z* rollRate * accroRate; 
+                cmdPitch = consignVector.x* pitchRate* accroRate;
+                cmdYaw = consignVector.y* yawRate* 0.1f * accroRate;
                 break;
             default:
                 cmdRoll = consignVector.z * accroRate * rollRate;
                 cmdPitch = consignVector.x * accroRate * pitchRate;
-                cmdYaw = consignVector.y * yawRate;
+                cmdYaw = consignVector.y * yawRate * accroRate;
                 break;
         }
     }
@@ -261,16 +268,18 @@ public class Controls : MonoBehaviour {
     {
         if (AIControl == true)
         {
-            motorCmdFrontRight = (cmdRoll + cmdPitch) * throttleRate;
-            motorCmdRearLeft = (-cmdRoll - cmdPitch) * throttleRate;
-            motorCmdRearRight = (cmdRoll - cmdPitch) * throttleRate;
+            motorCmdFrontLeft = (-cmdRoll + cmdPitch + cmdYaw) * throttleRate;
+            motorCmdFrontRight = (cmdRoll + cmdPitch - cmdYaw) * throttleRate;
+            motorCmdRearLeft = (-cmdRoll - cmdPitch - cmdYaw) * throttleRate;
+            motorCmdRearRight = (cmdRoll - cmdPitch + cmdYaw) * throttleRate;
             desiredSpeed = (minimalSpeed + throttle) * throttleRate;
         }
         else
         {
-            motorCmdFrontRight = (cmdRoll + cmdPitch) * throttleRate;
-            motorCmdRearLeft = (-cmdRoll - cmdPitch) * throttleRate;
-            motorCmdRearRight = (cmdRoll - cmdPitch) * throttleRate;
+            motorCmdFrontLeft = (-cmdRoll + cmdPitch + cmdYaw) * throttleRate;
+            motorCmdFrontRight = (cmdRoll + cmdPitch - cmdYaw) * throttleRate;
+            motorCmdRearLeft = (-cmdRoll - cmdPitch - cmdYaw) * throttleRate;
+            motorCmdRearRight = (cmdRoll - cmdPitch + cmdYaw) * throttleRate;
             desiredSpeed = (minimalSpeed + throttle) * throttleRate;
         }
         motorSet.motorSet[0].hoverSpeed = desiredSpeed;

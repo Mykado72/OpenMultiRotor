@@ -55,7 +55,24 @@ public class MotorRC : MonoBehaviour
         // motCmdSpeed = Mathf.Clamp(motCmdSpeed, 0, motActualVmax);
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            propeler.transform.Rotate(Vector3.forward * (controls.minimalRotationSpeed + (hoverSpeed*200 + motCmdSpeed*100)) * Delta);
+            if (Mathf.Abs(motCmdSpeed) >0)
+            {
+                float torque = (motCmdSpeed * 10000000f);
+                Vector3 rotate = Vector3.forward * (controls.minimalRotationSpeed+   hoverSpeed*100 + motCmdSpeed * 100000 * Delta);
+                if (Mathf.Abs(torque) > 0)
+                {
+                    if (anticlockwise == true)
+                    {
+                        rotate = -rotate;
+                        torque = -torque;
+                    }
+                    Debug.Log(torque);
+                    propeler.transform.Rotate(rotate);
+                    rg.AddTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
+                }
+
+            }
+
         }
         else
         {
@@ -68,8 +85,11 @@ public class MotorRC : MonoBehaviour
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
             motForceTrust = (hoverSpeed) * propeler.propThrust+ (motCmdSpeed);
-            rg.AddRelativeForce(new Vector3(0, motForceTrust, 0), ForceMode.Force);
-            FloorEffect();
+            if (Mathf.Abs(motForceTrust) > 0)
+            {
+                FloorEffect();
+                rg.AddRelativeForce(new Vector3(0, motForceTrust, 0), ForceMode.Force);
+            }                          
         }
     }
 

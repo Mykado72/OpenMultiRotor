@@ -57,7 +57,7 @@ public class MotorRC : MonoBehaviour
         {
             if (Mathf.Abs(motCmdSpeed) >0)
             {
-                float torque = (motCmdSpeed * 10000000f);
+                float torque = (motCmdSpeed * 1000000f);
                 Vector3 rotate = Vector3.forward * (controls.minimalRotationSpeed+   hoverSpeed*100 + motCmdSpeed * 100000 * Delta);
                 if (Mathf.Abs(torque) > 0)
                 {
@@ -65,13 +65,11 @@ public class MotorRC : MonoBehaviour
                     {
                         rotate = -rotate;
                         torque = -torque;
-                    }
+                    }                    
                     propeler.transform.Rotate(rotate);
-                    rg.AddTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
+                    rg.AddRelativeTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
                 }
-
             }
-
         }
         else
         {

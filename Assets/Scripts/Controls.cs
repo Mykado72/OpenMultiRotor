@@ -93,7 +93,7 @@ public class Controls : MonoBehaviour {
         rgChassi.maxAngularVelocity = 10; // Mathf.Infinity;
         rgChassi.angularVelocity = Vector3.zero;
         rgChassi.ResetInertiaTensor();
-        // rgChassi.centerOfMass = cg.position; // descendre le centre de gravité rend plus mou
+        // rgChassi.centerOfMass = rgChassi.centerOfMass + cg.position; // descendre le centre de gravité rend plus mou
 
         /* motorFrontLeft.transform.gameObject.SetActive(false);
         motorFrontLeft.transform.gameObject.SetActive(true);
@@ -174,19 +174,22 @@ public class Controls : MonoBehaviour {
     {
         if (AIControl == true)
         {
-            Vector3 targetDir = targetWaypoint.position - rgChassi.transform.position;
-            targetDir.y = 0;
-            Quaternion rotation = Quaternion.LookRotation(targetDir);
+
             //rgChassi.MoveRotation(Quaternion.Slerp(rgChassi.rotation, Quaternion.Euler(rgChassi.rotation.eulerAngles.x, rotation.eulerAngles.y, rgChassi.rotation.z), delta));
             // rgChassi.MoveRotation(Quaternion.Slerp(rgChassi.rotation, Quaternion.Euler(rotation.eulerAngles.x, rotation.eulerAngles.y, rotation.eulerAngles.z), delta*4));
             RelativeWaypointPosition = rgChassi.transform.InverseTransformPoint(targetWaypoint.position);
+            Vector3 rgChassiTransform = rgChassi.transform.position;
+            rgChassiTransform.y = 0;
+            Vector3 targetDir = targetWaypoint.position - rgChassiTransform;
+            targetDir.y = 0;
+            Quaternion rotation = Quaternion.LookRotation(targetDir);
             //float angle = Quaternion.Angle(rgChassi.rotation, QRelativeWaypointRotation); // angle de la cible par rapport au monde
             // float relangle = Quaternion.Angle(rgChassi.rotation, Quaternion.identity );  // angle du chassi par rapport au monde
-            consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rotation.eulerAngles.y, rgChassi.rotation.eulerAngles.y, stabspeed * delta), -1f, +1f);
-            consignVector.z = (consignVector.y*0.95f)+Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x+ RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta), -1f, +1f);
-            consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.z+RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta),-1f,+1f);
-
-            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta), -1f, +1f);
+            // consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rotation.eulerAngles.y, rgChassi.rotation.eulerAngles.y, stabspeed * delta), -1f, +1f);
+            consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rgChassi.position.x+ RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta),-1f,+1f);
+            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta)+ consignVector.y * 0.5f, -1f, +1f);
+            consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.z + RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta), -1f, +1f);
+            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta)+Mathf.Abs(rgChassi.rotation.eulerAngles.z)*0.00075f+ Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.0004f, -1f, +1f);
         }
         else // c'est un joueur
         {

@@ -66,7 +66,6 @@ public class MotorRC : MonoBehaviour
                         rotate = -rotate;
                         torque = -torque;
                     }
-                    Debug.Log(torque);
                     propeler.transform.Rotate(rotate);
                     rg.AddTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
                 }

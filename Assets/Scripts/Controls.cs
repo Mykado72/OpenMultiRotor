@@ -94,7 +94,7 @@ public class Controls : MonoBehaviour {
         rgChassi.maxAngularVelocity = 10; // Mathf.Infinity;
         rgChassi.angularVelocity = Vector3.zero;
         rgChassi.ResetInertiaTensor();
-        // rgChassi.centerOfMass = rgChassi.centerOfMass + cg.position; // descendre le centre de gravité rend plus mou
+        rgChassi.centerOfMass = cg.localPosition; // descendre le centre de gravité rend plus mou
 
         /* motorFrontLeft.transform.gameObject.SetActive(false);
         motorFrontLeft.transform.gameObject.SetActive(true);
@@ -164,10 +164,10 @@ public class Controls : MonoBehaviour {
             targetDir.y = 0;
             Quaternion rotation = Quaternion.LookRotation(targetDir);
             consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rgChassi.position.x+ RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta),-1f,+1f);
-            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta)+ consignVector.y*1.25f, -3f, +3f);
+            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta)+ consignVector.y*1.5f, -3f, +3f);
             consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.z + RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta), -1f, +1f);
             if (rgChassi.position.y < targetWaypoint.position.y)
-                throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.001f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.0005f;
+                throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.00001f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.7f;
             else
                 throttlecomp = 0;
             throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta)+throttlecomp, -1f, +1f);
@@ -225,7 +225,7 @@ public class Controls : MonoBehaviour {
             case 0:  // angle
                 AngularConsignVector.x = consignVector.x * pitchAngleMax;
                 AngularConsignVector.z = consignVector.z * rollAngleMax;
-                AngularConsignVector.y = consignVector.y * yawRate;
+                AngularConsignVector.y = consignVector.y;
                 cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed * fixeddelta);
                 cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, -ActualRotationVector.z, stabspeed * fixeddelta);
                 cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y + ActualRotationVector.y, ActualRotationVector.y, stabspeed * delta);
@@ -241,7 +241,7 @@ public class Controls : MonoBehaviour {
                 AngularConsignVector.y = consignVector.y * yawRate;
                 cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, 0, stabspeed * fixeddelta);
                 cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, 0, stabspeed * fixeddelta);
-                cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y + ActualRotationVector.y, 0, stabspeed * delta);
+                cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y, 0, stabspeed * delta);
 
 //                cmdRoll = consignVector.z * rollRate * accroRate ; 
 //                cmdPitch = consignVector.x * pitchRate * accroRate;

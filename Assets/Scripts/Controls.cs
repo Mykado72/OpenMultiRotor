@@ -164,7 +164,7 @@ public class Controls : MonoBehaviour {
             targetDir.y = 0;
             Quaternion rotation = Quaternion.LookRotation(targetDir);
             consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rgChassi.position.x+ RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta),-1f,+1f);
-            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta)+ consignVector.y*1.5f, -3f, +3f);
+            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta)+ consignVector.y*1.65f, -3f, +3f);
             consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.z + RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta), -1f, +1f);
             if (rgChassi.position.y < targetWaypoint.position.y)
                 throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.00001f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.7f;

@@ -164,11 +164,10 @@ public class Controls : MonoBehaviour {
             targetDir.y = 0;
             Quaternion rotation = Quaternion.LookRotation(targetDir);
             consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rgChassi.position.x+ RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta),-1f,+1f);
-            // consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta)+ consignVector.y*0.5f, -3f, +3f);
-            consignVector.z = consignVector.y * 1.25f;
+            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta), -1f, +1f);            
             consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.z + RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta), -1f, +1f);
             if (rgChassi.position.y < targetWaypoint.position.y)
-                throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.0002f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.2f;
+                throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.01f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.05f;
             else
                 throttlecomp = 0;
             throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta)+throttlecomp, -1f, +1f);

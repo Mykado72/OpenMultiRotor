@@ -34,6 +34,7 @@ public class Controls : MonoBehaviour {
     public float rollExpo;
     public float pitchRate;
     public float pitchExpo;
+    public float yawSpeed;
     public float yawRate;
     public float yawExpo;
     public float accroRate;
@@ -164,10 +165,10 @@ public class Controls : MonoBehaviour {
             targetDir.y = 0;
             Quaternion rotation = Quaternion.LookRotation(targetDir);
             consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rgChassi.position.x+ RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta),-1f,+1f);
-            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta), -1f, +1f);            
+            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta), -2f, +2f);            
             consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.z + RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta), -1f, +1f);
             if (rgChassi.position.y < targetWaypoint.position.y)
-                throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.01f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.05f;
+                throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.05f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.05f;
             else
                 throttlecomp = 0;
             throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta)+throttlecomp, -1f, +1f);
@@ -225,7 +226,7 @@ public class Controls : MonoBehaviour {
             case 0:  // angle
                 AngularConsignVector.x = consignVector.x * pitchAngleMax;
                 AngularConsignVector.z = consignVector.z * rollAngleMax;
-                AngularConsignVector.y = consignVector.y;
+                AngularConsignVector.y = consignVector.y * yawSpeed;
                 cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed * fixeddelta);
                 cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, -ActualRotationVector.z, stabspeed * fixeddelta);
                 cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y + ActualRotationVector.y, ActualRotationVector.y, stabspeed * delta);

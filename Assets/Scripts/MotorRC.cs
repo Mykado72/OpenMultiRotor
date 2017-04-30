@@ -19,13 +19,13 @@ public class MotorRC : MonoBehaviour
     public float motForceTrust;
     public float floorEffect;
     public float floorDistance;
-    public Controls controls;
+    private Controls controls;
     private Propeler propeler;
     private Rigidbody rg;
 
     void Awake()
     {
-        // controls = transform.parent.Find("Controls").GetComponent<Controls>();
+        controls = transform.parent.parent.GetComponent<Controls>();
         propeler = transform.GetComponentInChildren<Propeler>();
         rg = transform.GetComponent<Rigidbody>();
         // rg.transform.position = new Vector3(transform.position.x, 0, transform.position.z);  
@@ -55,21 +55,22 @@ public class MotorRC : MonoBehaviour
         // motCmdSpeed = Mathf.Clamp(motCmdSpeed, 0, motActualVmax);
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
+            Vector3 rotate = Vector3.forward * (controls.minimalRotationSpeed + hoverSpeed*5000 + motCmdSpeed*5000) * Delta;
             if (Mathf.Abs(motCmdSpeed) >0)
             {
                 float torque = (motCmdSpeed * 1000000f);
-                Vector3 rotate = Vector3.forward * (controls.minimalRotationSpeed+   hoverSpeed*100 + motCmdSpeed * 100000 * Delta);
-                if (Mathf.Abs(torque) > 0)
+
+                if ((Mathf.Abs(torque) > 0))
                 {
                     if (anticlockwise == true)
                     {
                         rotate = -rotate;
                         torque = -torque;
                     }                    
-                    propeler.transform.Rotate(rotate);
                     rg.AddRelativeTorque(new Vector3(0, torque, 0), ForceMode.VelocityChange);
                 }
             }
+            propeler.transform.Rotate(rotate);
         }
         else
         {
@@ -81,7 +82,7 @@ public class MotorRC : MonoBehaviour
     {
         if (gameObject.GetComponentInParent<FixedJoint>() || gameObject.GetComponentInParent<HingeJoint>())
         {
-            motForceTrust = (hoverSpeed) * propeler.propThrust+ (motCmdSpeed);
+            motForceTrust = (hoverSpeed) * propeler.propThrust+ (motCmdSpeed);          
             if (Mathf.Abs(motForceTrust) > 0)
             {
                 FloorEffect();

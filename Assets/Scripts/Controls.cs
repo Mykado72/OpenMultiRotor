@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Controls : MonoBehaviour {
@@ -16,9 +15,9 @@ public class Controls : MonoBehaviour {
     public PIDSet pidSet;
     public PIDSet AIControlPID;
     public int rcMode;
-    public enum flightModes { Angle, Horizon, Accro };
-    public Dropdown flightMode;
-    // public flightModes flightMode;
+    public enum FlightModes { Angle, Horizon, Accro };
+    // public Dropdown flightModeDropdown;
+    public FlightModes flightMode;
     public int pitchAngleMax = 45;
     public int rollAngleMax = 45;
     public float stabspeed = 0.25f;
@@ -97,33 +96,6 @@ public class Controls : MonoBehaviour {
         rgChassi.ResetInertiaTensor();
         rgChassi.centerOfMass = cg.localPosition; // descendre le centre de gravité rend plus mou
 
-        /* motorFrontLeft.transform.gameObject.SetActive(false);
-        motorFrontLeft.transform.gameObject.SetActive(true);
-        motorFrontLeft.isKinematic=true;
-        motorFrontLeft.isKinematic = false;
-        motorFrontLeft.angularVelocity = Vector3.zero;
-        motorFrontLeft.transform.rotation = Quaternion.Euler(Vector3.zero);
-
-        motorFrontRight.transform.gameObject.SetActive(false);
-        motorFrontRight.transform.gameObject.SetActive(true);
-        motorFrontRight.isKinematic = true;
-        motorFrontRight.isKinematic = false;
-        motorFrontRight.angularVelocity = Vector3.zero;
-        motorFrontRight.transform.rotation = Quaternion.Euler(Vector3.zero);
-
-        motorRearLeft.transform.gameObject.SetActive(false);
-        motorRearLeft.transform.gameObject.SetActive(true);
-        motorRearLeft.isKinematic = true;
-        motorRearLeft.isKinematic = false;
-        motorRearLeft.angularVelocity = Vector3.zero;
-        motorRearLeft.transform.rotation = Quaternion.Euler(Vector3.zero);
-
-        motorRearRight.transform.gameObject.SetActive(false);
-        motorRearRight.transform.gameObject.SetActive(true);
-        motorRearRight.isKinematic = true;
-        motorRearRight.isKinematic = false;
-        motorRearRight.angularVelocity = Vector3.zero;
-        motorRearRight.transform.rotation = Quaternion.Euler(Vector3.zero);   */
     }
 
     // Update is called once per frame
@@ -140,7 +112,7 @@ public class Controls : MonoBehaviour {
     {
         RotationCorrection();
         FlightMode();
-        // ClampVelocity();
+        ClampVelocity();
     }
 
     void RotationCorrection()
@@ -165,13 +137,14 @@ public class Controls : MonoBehaviour {
             targetDir.y = 0;
             Quaternion rotation = Quaternion.LookRotation(targetDir);
             consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rgChassi.position.x+ RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta),-1f,+1f);
-            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta), -2f, +2f);            
+            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta), -1f, +1f) + consignVector.y*0.5f;            
             consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.z + RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta), -1f, +1f);
-            if (rgChassi.position.y < targetWaypoint.position.y)
-                throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.05f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.05f;
-            else
-                throttlecomp = 0;
-            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta)+throttlecomp, -1f, +1f);
+
+            //if (rgChassi.position.y < targetWaypoint.position.y)
+            //    throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.0005f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.0005f;
+            //else
+            //    throttlecomp = 0;
+            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta)+ throttlecomp, -1f, +1f);
         }
         else // c'est un joueur
         {
@@ -221,32 +194,29 @@ public class Controls : MonoBehaviour {
     void FlightMode()
     {
         float fixeddelta = Time.fixedDeltaTime;
-        switch (flightMode.value)
+        switch (flightMode)
+        // switch (flightMode.value)
         {
-            case 0:  // angle
+            case FlightModes.Angle: //  0:  // angle
                 AngularConsignVector.x = consignVector.x * pitchAngleMax;
                 AngularConsignVector.z = consignVector.z * rollAngleMax;
                 AngularConsignVector.y = consignVector.y * yawSpeed;
                 cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed * fixeddelta);
                 cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, -ActualRotationVector.z, stabspeed * fixeddelta);
-                cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y + ActualRotationVector.y, ActualRotationVector.y, stabspeed * delta);
+                cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y + ActualRotationVector.y, ActualRotationVector.y, stabspeed * fixeddelta);
                 break;
-            case 2: // horizon
+            case FlightModes.Horizon: //2: // horizon
                 cmdRoll = consignVector.z * rollRate * accroRate;
                 cmdPitch = consignVector.x * pitchRate * accroRate;
                 cmdYaw = consignVector.y * yawRate * accroRate;
                 break;
-            case 1: // acro
+            case FlightModes.Accro: // 1: // acro
                 AngularConsignVector.x = consignVector.x * pitchAngleMax;
                 AngularConsignVector.z = consignVector.z * rollAngleMax;
                 AngularConsignVector.y = consignVector.y * yawRate;
                 cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, 0, stabspeed * fixeddelta);
                 cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, 0, stabspeed * fixeddelta);
-                cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y, 0, stabspeed * delta);
-
-//                cmdRoll = consignVector.z * rollRate * accroRate ; 
-//                cmdPitch = consignVector.x * pitchRate * accroRate;
-//                cmdYaw = consignVector.y * yawRate * accroRate;
+                cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y, 0, stabspeed * fixeddelta);
                 break;
             default:
                 AngularConsignVector.x = consignVector.x * pitchAngleMax;
@@ -254,7 +224,7 @@ public class Controls : MonoBehaviour {
                 AngularConsignVector.y = consignVector.y * yawRate;
                 cmdPitch = pidSet.pitchPID.Update(AngularConsignVector.x, ActualRotationVector.x, stabspeed * fixeddelta);
                 cmdRoll = pidSet.rollPID.Update(AngularConsignVector.z, -ActualRotationVector.z, stabspeed * fixeddelta);
-                cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y + ActualRotationVector.y, ActualRotationVector.y, stabspeed * delta);
+                cmdYaw = pidSet.yawPID.Update(AngularConsignVector.y + ActualRotationVector.y, ActualRotationVector.y, stabspeed * fixeddelta);
                 break;
         }
     }
@@ -277,15 +247,9 @@ public class Controls : MonoBehaviour {
     void ClampVelocity()
     {
         // rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 10f);
-        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 25f);
+        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 22f);
     }
-
-
-    public void Restart()
-    {
-        SceneManager.LoadScene("scene1");
-    }
-
+    
     public float Expo(float value, float expo, float deadband)
     {  // expo allant de 0 à 1 
         if (Mathf.Abs(value) > deadband)
@@ -299,4 +263,6 @@ public class Controls : MonoBehaviour {
         if (value < 0) value += 360f;
         return value;
     }
+
+
 }

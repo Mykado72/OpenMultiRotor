@@ -9,6 +9,7 @@ using UnityEngine.UI;
 
 public class Controls : MonoBehaviour {
 
+    public GameObject fakeGo;
     public Transform cg;
     public bool AIControl;
     private float delta;
@@ -25,10 +26,10 @@ public class Controls : MonoBehaviour {
     public AxisMap axisMap;
     public Mapping mapping;
     public float throttle;
-    private float throttlecomp;
     public float minimalSpeed;
     public float minimalRotationSpeed;
     public float throttleRate;
+    public float ratioThrottleCmd;
     public float rollRate;
     public float rollExpo;
     public float pitchRate;
@@ -65,10 +66,12 @@ public class Controls : MonoBehaviour {
     public Vector3 RelativeWaypointRotation;
     public Quaternion QRelativeWaypointRotation;
     public Quaternion rotationDelta;
+    public float rotationDeltaY;
     public Vector3 rotationDeltaEuler;
 
     // Use this for initialization
     void  Awake () {
+        fakeGo = new GameObject();
         waypointnb = 0;
         targetWaypoint= waypointSystem.waypoints[waypointnb];
     }
@@ -103,16 +106,18 @@ public class Controls : MonoBehaviour {
         delta = Time.deltaTime;       
         GetControls();
         convertedThrottle = (1 + throttle) / 2 ;
-        // desiredSpeed = (throttleRate)* convertedThrottle*100; // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
+        // desiredSpeed = (minimalSpeed + throttle) * throttleRate;
+        desiredSpeed = minimalSpeed+ (throttleRate*convertedThrottle); // + (motorSet.motorSet[0].motActualVmax*0.5f)   * convertedThrottle;
         //FlightMode();
-        SendCmdToMotors();               
+        SendCmdToMotors();
     }
     
     void FixedUpdate()
     {
         RotationCorrection();
         FlightMode();
-        ClampVelocity();
+        ClampVelocity(30f);
+        rgChassi.AddRelativeForce(new Vector3(0, desiredSpeed* ratioThrottleCmd, 0), ForceMode.Force);
     }
 
     void RotationCorrection()
@@ -128,23 +133,23 @@ public class Controls : MonoBehaviour {
 
     void GetControls()
     {
+        Transform rgChassiTransform = rgChassi.transform;
+        RelativeWaypointPosition = rgChassiTransform.InverseTransformPoint(targetWaypoint.position);
+        
+        fakeGo.transform.position = rgChassi.transform.position;
+        fakeGo.transform.rotation = rgChassi.transform.rotation;
+        Vector3 targetDir = targetWaypoint.position - fakeGo.transform.position;
+        targetDir = targetDir.normalized;
+        targetDir.y = fakeGo.transform.position.y;
+        fakeGo.transform.rotation = Quaternion.LookRotation(targetDir);
+        rotationDeltaY = Vector3.Cross(rgChassiTransform.transform.forward, targetDir).y; 
+
         if (AIControl == true)
         {
-            RelativeWaypointPosition = rgChassi.transform.InverseTransformPoint(targetWaypoint.position);
-            Vector3 rgChassiTransform = rgChassi.transform.position;
-            rgChassiTransform.y = 0;
-            Vector3 targetDir = targetWaypoint.position - rgChassiTransform;
-            targetDir.y = 0;
-            Quaternion rotation = Quaternion.LookRotation(targetDir);
-            consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rgChassi.position.x+ RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta),-1f,+1f);
-            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassi.position.x + RelativeWaypointPosition.x, rgChassi.position.x, stabspeed * delta), -1f, +1f) + consignVector.y*0.5f;            
-            consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassi.position.z + RelativeWaypointPosition.z, rgChassi.position.z, stabspeed * delta), -1f, +1f);
-
-            //if (rgChassi.position.y < targetWaypoint.position.y)
-            //    throttlecomp = Mathf.Abs(rgChassi.rotation.eulerAngles.z) * 0.0005f + Mathf.Abs(rgChassi.rotation.eulerAngles.x) * 0.0005f;
-            //else
-            //    throttlecomp = 0;
-            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta)+ throttlecomp, -1f, +1f);
+            consignVector.y = Mathf.Clamp(AIControlPID.yawPID.Update(rotationDeltaY,0, stabspeed * delta), -1f, +1f);
+            consignVector.z = Mathf.Clamp(AIControlPID.rollPID.Update(rgChassiTransform.position.x + RelativeWaypointPosition.x, rgChassiTransform.position.x, stabspeed * delta), -1f, +1f); // consignVector.y*0.5f;            
+            consignVector.x = Mathf.Clamp(AIControlPID.pitchPID.Update(rgChassiTransform.position.z + RelativeWaypointPosition.z, rgChassiTransform.position.z, stabspeed * delta), -1f, +1f);
+            throttle = Mathf.Clamp(AIControlPID.throttlePID.Update(targetWaypoint.position.y, rgChassi.position.y, stabspeed * delta), -1f, +1f);
         }
         else // c'est un joueur
         {
@@ -234,20 +239,18 @@ public class Controls : MonoBehaviour {
         motorCmdFrontRight = (cmdRoll + cmdPitch - cmdYaw) * throttleRate;
         motorCmdRearLeft = (-cmdRoll - cmdPitch - cmdYaw) * throttleRate;
         motorCmdRearRight = (cmdRoll - cmdPitch + cmdYaw) * throttleRate;
-        desiredSpeed = (minimalSpeed + throttle) * throttleRate;
-        motorSet.motorSet[0].hoverSpeed = desiredSpeed;
-        motorSet.motorSet[1].hoverSpeed = desiredSpeed;
-        motorSet.motorSet[2].hoverSpeed = desiredSpeed;
-        motorSet.motorSet[3].hoverSpeed = desiredSpeed;
+        motorSet.motorSet[0].hoverSpeed = desiredSpeed; //* (1/ratioThrottleCmd);
+        motorSet.motorSet[1].hoverSpeed = desiredSpeed; //* (1/ratioThrottleCmd);
+        motorSet.motorSet[2].hoverSpeed = desiredSpeed; //* (1/ratioThrottleCmd);
+        motorSet.motorSet[3].hoverSpeed = desiredSpeed; //* (1/ratioThrottleCmd); 
         motorSet.motorSet[0].motCmdSpeed = motorCmdFrontLeft;// + motorCmdFrontLeft* motorSet.motorSet[0].motActualAcc*0.5f;// *  throttleRate;
         motorSet.motorSet[1].motCmdSpeed = motorCmdFrontRight;// + motorCmdFrontRight* motorSet.motorSet[1].motActualAcc*0.5f; // * throttleRate;
         motorSet.motorSet[2].motCmdSpeed = motorCmdRearLeft;// + motorCmdRearLeft* motorSet.motorSet[2].motActualAcc*0.5f; // * throttleRate;
         motorSet.motorSet[3].motCmdSpeed = motorCmdRearRight;// + motorCmdRearRight* motorSet.motorSet[3].motActualAcc*0.5f; // * throttleRate;     
     }
-    void ClampVelocity()
+    void ClampVelocity(float speed)
     {
-        // rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 10f);
-        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, 22f);
+        rgChassi.velocity = Vector3.ClampMagnitude(rgChassi.velocity, speed);
     }
     
     public float Expo(float value, float expo, float deadband)
